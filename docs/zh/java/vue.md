@@ -16,6 +16,7 @@ footer: MIT Licensed | Copyright © 2018-present Evan You
 [请点击下面继续学习内容](/zh/java/vue/js-skils.md)
 
 # Github访问速度很慢的原因，以及解决方法
+[参考地址](https://blog.csdn.net/tsq292978891/article/details/78260066)
 - 1，CDN，Content Distribute Network，可以直译成内容分发网络，CDN解决的是如何将数据快速可靠从源站传递到用户的问题。用户获取数据时，不需要直接从源站获取，通过CDN对于数据的分发，用户可以从一个较优的服务器获取数据，从而达到快速访问，并减少源站负载压力的目的。
 - 2，为什么访问速度慢、下载慢？
   <br/>
