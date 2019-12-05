@@ -28,25 +28,15 @@ footer: MIT Licensed | Copyright © 2018-present Evan You
 hosts文件所在目录，C:\Windows\System32\drivers\etc
 <br/>
 修改windows里的hosts文件，添加如下内容
+<br/>
+配置hosts[参考](https://www.jianshu.com/p/0493dcc15d6f)
+<br/>
+我们主要需要考虑的域名是github.com,和github.global.ssl.fastly.net
+可以在[地址](https://www.ipaddress.com/ )上查询对应域名对应的IP
 ```vue
 # Github cdn start ===>
-151.101.44.249 github.global.ssl.fastly.net 
-192.30.253.113 github.com 
-103.245.222.133 assets-cdn.github.com 
-23.235.47.133 assets-cdn.github.com 
-203.208.39.104 assets-cdn.github.com 
-204.232.175.78 documentcloud.github.com 
-204.232.175.94 gist.github.com 
-107.21.116.220 help.github.com 
-207.97.227.252 nodeload.github.com 
-199.27.76.130 raw.github.com 
-107.22.3.110 status.github.com 
-204.232.175.78 training.github.com 
-207.97.227.243 www.github.com 
-185.31.16.184 github.global.ssl.fastly.net 
-185.31.18.133 avatars0.githubusercontent.com 
-185.31.19.133 avatars1.githubusercontent.com
-192.30.253.120 codeload.github.com
+192.30.253.112 github.com
+199.232.5.194 github.global.ssl.fastly.net
 
 # Github cdn end <======
 
