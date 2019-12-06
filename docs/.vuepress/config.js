@@ -47,6 +47,10 @@ module.exports = {
               {
                 text: 'Vue技巧',
                 link: '/zh/java/vue'
+              },
+              {
+                  text: 'Java的23种设计模式',
+                  link: '/zh/java/design'
               }
           ]
       }
@@ -116,6 +120,15 @@ module.exports = {
               collapsable: false,
               children: [
                   '/zh/java/vue/js-skils.md',
+              ]
+          }
+      ],
+      '/zh/java/design': [
+          {
+              title: 'Java的23种设计模式',
+              collapsable: false,
+              children: [
+                  '/zh/java/design/detail.md',
               ]
           }
       ]
