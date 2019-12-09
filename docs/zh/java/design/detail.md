@@ -1319,7 +1319,1597 @@ class ReadXML
 ### 模式的扩展
 建造者（Builder）模式在应用过程中可以根据需要改变，如果创建的产品种类只有一种，只需要一个具体建造者，这时可以省略掉抽象建造者，甚至可以省略掉指挥者角色。
 
-## 6.结构型模式概述（结构型模式的分类）
+## 结构型模式概述（结构型模式的分类）
+结构型模式描述如何将类或对象按某种布局组成更大的结构。它分为类结构型模式和对象结构型模式，前者采用继承机制来组织接口和类，后者釆用组合或聚合来组合对象。
+<br/>
+由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象结构型模式比类结构型模式具有更大的灵活性。
+<br/>
+结构型模式分为以下 7 种：
+- 1.代理（Proxy）模式：为某对象提供一种代理以控制对该对象的访问。即客户端通过代理间接地访问该对象，从而限制、增强或修改该对象的一些特性。
+- 2.适配器（Adapter）模式：将一个类的接口转换成客户希望的另外一个接口，使得原本由于接口不兼容而不能一起工作的那些类能一起工作。
+- 3.桥接（Bridge）模式：将抽象与实现分离，使它们可以独立变化。它是用组合关系代替继承关系来实现的，从而降低了抽象和实现这两个可变维度的耦合度。
+- 4.装饰（Decorator）模式：动态地给对象增加一些职责，即增加其额外的功能。
+- 5.外观（Facade）模式：为多个复杂的子系统提供一个一致的接口，使这些子系统更加容易被访问。
+- 6.享元（Flyweight）模式：运用共享技术来有效地支持大量细粒度对象的复用。
+- 7.组合（Composite）模式：将对象组合成树状层次结构，使用户对单个对象和组合对象具有一致的访问性。
+## 6.代理模式（代理设计模式）详解
+在有些情况下，一个客户不能或者不想直接访问另一个对象，这时需要找一个中介帮忙完成某项任务，这个中介就是代理对象。例如，购买火车票不一定要去火车站买，可以通过 12306 网站或者去火车票代售点买。又如找女朋友、找保姆、找工作等都可以通过找中介完成。
+<br/>
+在软件设计中，使用代理模式的例子也很多，例如，要访问的远程对象比较大（如视频或大图像等），其下载要花很多时间。还有因为安全原因需要屏蔽客户端直接访问真实对象，如某单位的内部数据库等。
+<br/>
+### 代理模式的定义与特点
+代理模式的定义：由于某些原因需要给某对象提供一个代理以控制对该对象的访问。这时，访问对象不适合或者不能直接引用目标对象，代理对象作为访问对象和目标对象之间的中介。
+<br/>
+代理模式的主要优点有：
+- 代理模式在客户端与目标对象之间起到一个中介作用和保护目标对象的作用；
+- 代理对象可以扩展目标对象的功能；
+- 代理模式能将客户端与目标对象分离，在一定程度上降低了系统的耦合度；
+<br/>
+其主要缺点是：
+- 在客户端和目标对象之间增加一个代理对象，会造成请求处理速度变慢；
+- 增加了系统的复杂度；
+### 代理模式的结构与实现
+代理模式的结构比较简单，主要是通过定义一个继承抽象主题的代理来包含真实主题，从而实现对真实主题的访问，下面来分析其基本结构和实现方法。
+<br/>
+#### 1. 模式的结构
+代理模式的主要角色如下。
+- 1.抽象主题（Subject）类：通过接口或抽象类声明真实主题和代理对象实现的业务方法。
+- 2.真实主题（Real Subject）类：实现了抽象主题中的具体业务，是代理对象所代表的真实对象，是最终要引用的对象。
+- 3.代理（Proxy）类：提供了与真实主题相同的接口，其内部含有对真实主题的引用，它可以访问、控制或扩展真实主题的功能。
+<br/>
+![](/images/design/25.gif)
+<br/>
+图1 代理模式的结构图
+#### 2. 模式的实现
+```java
+package proxy;
+public class ProxyTest
+{
+    public static void main(String[] args)
+    {
+        Proxy proxy=new Proxy();
+        proxy.Request();
+    }
+}
+//抽象主题
+interface Subject
+{
+    void Request();
+}
+//真实主题
+class RealSubject implements Subject
+{
+    public void Request()
+    {
+        System.out.println("访问真实主题方法...");
+    }
+}
+//代理
+class Proxy implements Subject
+{
+    private RealSubject realSubject;
+    public void Request()
+    {
+        if (realSubject==null)
+        {
+            realSubject=new RealSubject();
+        }
+        preRequest();
+        realSubject.Request();
+        postRequest();
+    }
+    public void preRequest()
+    {
+        System.out.println("访问真实主题之前的预处理。");
+    }
+    public void postRequest()
+    {
+        System.out.println("访问真实主题之后的后续处理。");
+    }
+}
+```
+```info
+程序运行的结果如下：
+访问真实主题之前的预处理。
+访问真实主题方法...
+访问真实主题之后的后续处理。
+```
+### 代理模式的应用实例
+#### 【例1】韶关“天街e角”公司是一家婺源特产公司的代理公司，用代理模式实现。
+分析：本实例中的“婺源特产公司”经营许多婺源特产，它是真实主题，提供了显示特产的 display() 方法，可以用窗体程序实现（[点此下载该实例所要显示的图片](http://c.biancheng.net/uploads/soft/181113/3-1Q115111318.zip)）。而韶关“天街e角”公司是婺源特产公司特产的代理，通过调用婺源特产公司的 display() 方法显示代理产品，当然它可以增加一些额外的处理，如包裝或加价等。客户可通过“天街e角”代理公司间接访问“婺源特产公司”的产品，图 2 所示是公司的结构图。
+<br/>
+![](/images/desigin/26.gif)
+<br/>
+图2 韶关“天街e角”公司的结构图
+```java
+package proxy;
+import java.awt.*;
+import javax.swing.*;
+public class WySpecialtyProxy
+{
+    public static void main(String[] args)
+    {
+        SgProxy proxy=new SgProxy();
+        proxy.display();
+    }
+}
+//抽象主题：特产
+interface Specialty
+{
+    void display();
+}
+//真实主题：婺源特产
+class WySpecialty extends JFrame implements Specialty
+{
+    private static final long serialVersionUID=1L;
+    public WySpecialty()
+    {
+        super("韶关代理婺源特产测试");
+        this.setLayout(new GridLayout(1,1));
+        JLabel l1=new JLabel(new ImageIcon("src/proxy/WuyuanSpecialty.jpg"));
+        this.add(l1);   
+        this.pack();       
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);      
+    }
+    public void display()
+    {
+        this.setVisible(true);
+    }
+}
+//代理：韶关代理
+class SgProxy implements Specialty
+{
+    private WySpecialty realSubject=new WySpecialty();
+    public void display()
+    {
+        preRequest();
+        realSubject.display();
+        postRequest();
+    }
+    public void preRequest()
+    {
+          System.out.println("韶关代理婺源特产开始。");
+    }
+    public void postRequest()
+    {
+          System.out.println("韶关代理婺源特产结束。");
+    }
+}
+```
+
+### 代理模式的应用场景
+- 远程代理，这种方式通常是为了隐藏目标对象存在于不同地址空间的事实，方便客户端访问。例如，用户申请某些网盘空间时，会在用户的文件系统中建立一个虚拟的硬盘，用户访问虚拟硬盘时实际访问的是网盘空间。
+- 虚拟代理，这种方式通常用于要创建的目标对象开销很大时。例如，下载一幅很大的图像需要很长时间，因某种计算比较复杂而短时间无法完成，这时可以先用小比例的虚拟代理替换真实的对象，消除用户对服务器慢的感觉。
+- 安全代理，这种方式通常用于控制不同种类客户对真实对象的访问权限。
+- 智能指引，主要用于调用目标对象时，代理附加一些额外的处理功能。例如，增加计算真实对象的引用次数的功能，这样当该对象没有被引用时，就可以自动释放它。
+- 延迟加载，指为了提高系统的性能，延迟对目标的加载。例如，Hibernate 中就存在属性的延迟加载和关联表的延时加载。
+
+### 代理模式的扩展
+在前面介绍的代理模式中，代理类中包含了对真实主题的引用，这种方式存在两个缺点。
+- 真实主题与代理主题一一对应，增加真实主题也要增加代理。
+- 设计代理以前真实主题必须事先存在，不太灵活。采用动态代理模式可以解决以上问题，如 [Spring](http://c.biancheng.net/spring/)AOP，其结构图如图 4 所示。
+<br/>
+![](/images/design/27.gif)
+<br/>
+```java
+package com.wu.qiang.proxy.dyna;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+
+/**
+ * @auth wq on 2019/12/9 10:19
+ **/
+public class Client {
+    public static void main(String[] args) {
+        // 代理的主题
+        AbstractSubject subject = null;
+        InvocationHandler handler = null;
+        handler = new DynamicProxy(new RealSubject2());
+        subject = (AbstractSubject) Proxy.newProxyInstance(AbstractSubject.class.getClassLoader(), new Class[]{AbstractSubject.class}, handler);
+        subject.request();
+    }
+}
+
+```
+```java
+package com.wu.qiang.proxy.dyna;
+
+/**
+ * 动态代理的接口
+ * @auth wq on 2019/12/9 10:11
+ **/
+public interface AbstractSubject {
+    void request();
+}
+
+```
+```java
+package com.wu.qiang.proxy.dyna;
+
+/**
+ * 真实主题1
+ * @auth wq on 2019/12/9 10:12
+ **/
+public class RealSubject1 implements AbstractSubject {
+    @Override
+    public void request() {
+        System.out.println("真实主题01，我的类型=RealSubject1");
+    }
+}
+
+```
+```java
+package com.wu.qiang.proxy.dyna;
+
+/**
+* 真实的主题2
+ * @auth wq on 2019/12/9 10:13
+ **/
+public class RealSubject2 implements AbstractSubject {
+    @Override
+    public void request() {
+        System.out.println("真实主题02，我的类型=RealSubject2,不一样的风格呵呵");
+    }
+}
+
+```
+
+```java
+package com.wu.qiang.proxy.dyna;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+/**
+* 动态代理对象
+ * @auth wq on 2019/12/9 10:17
+ **/
+public class DynamicProxy implements InvocationHandler {
+    // 代理的对象
+    private Object obj;
+    public DynamicProxy(Object obj) {
+        this.obj = obj;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        method.invoke(obj, args);
+        return null;
+    }
+}
+
+```
+### [两种实现动态代理](https://www.cnblogs.com/socketqiang/p/11212029.html)
+AOP的源码中用到了两种动态代理来实现拦截切入功能：jdk动态代理和cglib动态代理。两种方法同时存在，各有优劣。jdk动态代理是由java内部的反射机制来实现的，cglib动态代理底层则是借助asm来实现的。总的来说，反射机制在生成类的过程中比较高效，而asm在生成类之后的相关执行过程中比较高效（可以通过将asm生成的类进行缓存，这样解决asm生成类过程低效问题）。还有一点必须注意：jdk动态代理的应用前提，必须是目标类基于统一的接口。如果没有上述前提，jdk动态代理不能应用。由此可以看出，jdk动态代理有一定的局限性，cglib这种第三方类库实现的动态代理应用更加广泛，且在效率上更有优势。
+
+#### jdk动态代理
+```java
+package com.xiaoqiang.design;
+// 动态代理的接口
+public interface Person {
+
+      public void buy();
+
+    public void buy1();
+}
+```
+```java
+package com.xiaoqiang.design;
+// 动态代理的实现
+public class xiaoQiang implements  Person {
+    private String name;
+    private String house;
+
+    public xiaoQiang(String name, String house) {
+        this.name = name;
+        this.house = house;
+    }
+
+    @Override
+    public void buy() {
+        System.out.println(name+"买了"+house);
+    }
+
+    @Override
+    public void buy1() {
+        System.out.println("我是你爸爸");
+    }
+}
+```
+```java
+package com.xiaoqiang.design;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+// 动态代理
+public class ProxySaler implements InvocationHandler {
+
+    public Person person;
+
+    public Object newInstall(Person person)
+    {
+        this.person=person;
+        return  Proxy.newProxyInstance(person.getClass().getClassLoader(),person.getClass().getInterfaces(),this);
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("执行方法前的操作");
+        if(method.getName().equals("buy")) {
+            person.buy();
+        }
+        if(method.getName().equals("buy1"))
+        {
+            person.buy1();
+        }
+        System.out.println("执行方法后的操作");
+        return null;
+    }
+}
+```
+```java
+package com.xiaoqiang.design;
+
+import sun.misc.ProxyGenerator;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+// JDK动态代理的测试
+public class TestMain {
+
+    public static void main(String[] args) {
+        ProxySaler proxySaler=new ProxySaler();
+        Person object= (Person) proxySaler.newInstall(new xiaoQiang("黄豪强","南山区"));
+        object.buy1();
+        object.buy();
+    }
+}
+```
+#### Cglib方法的动态代理
+需要导入Cglib的jar包：
+```pom
+    <!-- https://mvnrepository.com/artifact/cglib/cglib -->
+    <dependency>
+        <groupId>cglib</groupId>
+        <artifactId>cglib</artifactId>
+        <version>3.2.12</version>
+    </dependency>
+```
+1.定义被代理的方法:
+```java
+public class PlayGame {
+    // 被代理的方法，不需要接口
+    public void play()
+    {
+        System.out.println("打篮球很厉害");
+    }
+}
+```
+2.代理类
+```java
+import net.sf.cglib.proxy.Callback;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+
+import java.lang.reflect.Method;
+
+/**
+ * @author 
+ * @create 2019/7/24 8:51
+ */
+public class CglibProxy implements MethodInterceptor {
+
+    public Object newInstall(Object object) {
+
+        return Enhancer.create(object.getClass(), this);
+    }
+
+
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        System.out.println("先热身一会");
+        methodProxy.invokeSuper(o,objects);
+        System.out.println("打完了");
+        return null;
+    }
+
+}
+```
+3.运行类:测试gclib代理
+```java
+public class ProxyTeest {
+    public static void main(String[] args) {
+           CglibProxy cglibProxy=new CglibProxy();
+            PlayGame playGame= (PlayGame) cglibProxy.newInstall(new PlayGame());
+            playGame.play();
+    }
+}
+```
+
+## 7.适配器模式（Adapter模式）详解
+在现实生活中，经常出现两个对象因接口不兼容而不能在一起工作的实例，这时需要第三者进行适配。例如，讲中文的人同讲英文的人对话时需要一个翻译，用直流电的笔记本电脑接交流电源时需要一个电源适配器，用计算机访问照相机的 SD 内存卡时需要一个读卡器等。
+<br/>
+在软件设计中也可能出现：需要开发的具有某种业务功能的组件在现有的组件库中已经存在，但它们与当前系统的接口规范不兼容，如果重新开发这些组件成本又很高，这时用适配器模式能很好地解决这些问题。
+### 模式的定义与特点
+适配器模式（Adapter）的定义如下：将一个类的接口转换成客户希望的另外一个接口，使得原本由于接口不兼容而不能一起工作的那些类能一起工作。适配器模式分为类结构型模式和对象结构型模式两种，前者类之间的耦合度比后者高，且要求程序员了解现有组件库中的相关组件的内部结构，所以应用相对较少些。
+<br/>
+该模式的主要优点如下。
+- 客户端通过适配器可以透明地调用目标接口。
+- 复用了现存的类，程序员不需要修改原有代码而重用现有的适配者类。
+- 将目标类和适配者类解耦，解决了目标类和适配者类接口不一致的问题。
+<br/>
+其缺点是：对类适配器来说，更换适配器的实现过程比较复杂。
+
+### 模式的结构与实现
+类适配器模式可采用多重继承方式实现，如 [C++](http://c.biancheng.net/cplus/) 可定义一个适配器类来同时继承当前系统的业务接口和现有组件库中已经存在的组件接口；[Java](http://c.biancheng.net/java/) 不支持多继承，但可以定义一个适配器类来实现当前系统的业务接口，同时又继承现有组件库中已经存在的组件。
+<br/>
+对象适配器模式可釆用将现有组件库中已经实现的组件引入适配器类中，该类同时实现当前系统的业务接口。现在来介绍它们的基本结构。
+#### 1. 模式的结构
+适配器模式（Adapter）包含以下主要角色。
+- 1.目标（Target）接口：当前系统业务所期待的接口，它可以是抽象类或接口。
+- 2.适配者（Adaptee）类：它是被访问和适配的现存组件库中的组件接口。
+- 3.适配器（Adapter）类：它是一个转换器，通过继承或引用适配者的对象，把适配者接口转换成目标接口，让客户按目标接口的格式访问适配者。
+<br/>
+类适配器模式的结构图如图 1 所示。
+<br/>
+<div style="text-align: center;">
+![](/images/design/28.gif)
+<br/>
+图1 类适配器模式的结构图
+</div>
+对象适配器模式的结构图如图 2 所示。
+<br/>
+<div style="text-align: center;">
+![](/images/design/29.gif)
+<br/>
+图2 类适配器模式的结构图
+</div>
+
+#### 2. 模式的实现
+(1) 类适配器模式的代码如下。
+```java
+package adapter;
+//目标接口
+interface Target
+{
+    public void request();
+}
+//适配者接口
+class Adaptee
+{
+    public void specificRequest()
+    {       
+        System.out.println("适配者中的业务代码被调用！");
+    }
+}
+//类适配器类
+class ClassAdapter extends Adaptee implements Target
+{
+    public void request()
+    {
+        specificRequest();
+    }
+}
+//客户端代码
+public class ClassAdapterTest
+{
+    public static void main(String[] args)
+    {
+        System.out.println("类适配器模式测试：");
+        Target target = new ClassAdapter();
+        target.request();
+    }
+}
+```
+```info
+程序的运行结果如下：
+类适配器模式测试：
+适配者中的业务代码被调用！
+```
+
+(2)对象适配器模式的代码如下。
+```java
+package adapter;
+//对象适配器类
+class ObjectAdapter implements Target
+{
+    private Adaptee adaptee;
+    public ObjectAdapter(Adaptee adaptee)
+    {
+        this.adaptee=adaptee;
+    }
+    public void request()
+    {
+        adaptee.specificRequest();
+    }
+}
+//客户端代码
+public class ObjectAdapterTest
+{
+    public static void main(String[] args)
+    {
+        System.out.println("对象适配器模式测试：");
+        Adaptee adaptee = new Adaptee();
+        Target target = new ObjectAdapter(adaptee);
+        target.request();
+    }
+}
+```
+说明：对象适配器模式中的“目标接口”和“适配者类”的代码同类适配器模式一样，只要修改适配器类和客户端的代码即可。
+<br/>
+```info
+程序的运行结果如下：
+对象适配器模式测试：
+适配者中的业务代码被调用！
+```
+### 模式的应用实例
+#### 【例1】用适配器模式（Adapter）模拟新能源汽车的发动机。
+分析：新能源汽车的发动机有电能发动机（Electric Motor）和光能发动机（Optical Motor）等，各种发动机的驱动方法不同，例如，电能发动机的驱动方法 electricDrive() 是用电能驱动，而光能发动机的驱动方法 opticalDrive() 是用光能驱动，它们是适配器模式中被访问的适配者。
+<br/>
+客户端希望用统一的发动机驱动方法 drive() 访问这两种发动机，所以必须定义一个统一的目标接口 Motor，然后再定义电能适配器（Electric Adapter）和光能适配器（Optical Adapter）去适配这两种发动机。
+<br/>
+我们把客户端想访问的新能源发动机的适配器的名称放在 XML 配置文件中（[点此下载 XML 文件](http://c.biancheng.net/uploads/soft/181113/3-1Q115110A5.zip)），客户端可以通过对象生成器类 ReadXML 去读取。这样，客户端就可以通过 Motor 接口随便使用任意一种新能源发动机去驱动汽车，图 3 所示是其结构图。
+<br/>
+![](/images/design/30.gif)
+<br/>
+图3 发动机适配器的结构图
+```java
+package adapter;
+//目标：发动机
+interface Motor
+{
+    public void drive();
+}
+//适配者1：电能发动机
+class ElectricMotor
+{
+    public void electricDrive()
+    {
+        System.out.println("电能发动机驱动汽车！");
+    }
+}
+//适配者2：光能发动机
+class OpticalMotor
+{
+    public void opticalDrive()
+    {
+        System.out.println("光能发动机驱动汽车！");
+    }
+}
+//电能适配器
+class ElectricAdapter implements Motor
+{
+    private ElectricMotor emotor;
+    public ElectricAdapter()
+    {
+        emotor=new ElectricMotor();
+    }
+    public void drive()
+    {
+        emotor.electricDrive();
+    }
+}
+//光能适配器
+class OpticalAdapter implements Motor
+{
+    private OpticalMotor omotor;
+    public OpticalAdapter()
+    {
+        omotor=new OpticalMotor();
+    }
+    public void drive()
+    {
+        omotor.opticalDrive();
+    }
+}
+//客户端代码
+public class MotorAdapterTest
+{
+    public static void main(String[] args)
+    {
+        System.out.println("适配器模式测试：");
+        Motor motor=(Motor)ReadXML.getObject();
+        motor.drive();
+    }
+}
+```
+```java
+package adapter;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
+import java.io.*;
+class ReadXML
+{
+    public static Object getObject()
+    {
+        try
+        {
+            DocumentBuilderFactory dFactory=DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder=dFactory.newDocumentBuilder();
+            Document doc;                           
+            doc=builder.parse(new File("src/adapter/config.xml"));
+            NodeList nl=doc.getElementsByTagName("className");
+            Node classNode=nl.item(0).getFirstChild();
+            String cName="adapter."+classNode.getNodeValue();
+            Class<?> c=Class.forName(cName);
+              Object obj=c.newInstance();
+            return obj;
+         }  
+         catch(Exception e)
+         {
+                   e.printStackTrace();
+                   return null;
+         }
+    }
+}
+```
+```info
+程序的运行结果如下：
+适配器模式测试：
+电能发动机驱动汽车！
+```
+### 模式的应用场景
+适配器模式（Adapter）通常适用于以下场景。
+- 以前开发的系统存在满足新系统功能需求的类，但其接口同新系统的接口不一致。
+- 使用第三方提供的组件，但组件接口定义和自己要求的接口定义不同。
+
+### 模式的扩展
+适配器模式（Adapter）可扩展为双向适配器模式，双向适配器类既可以把适配者接口转换成目标接口，也可以把目标接口转换成适配者接口，其结构图如图 4 所示。
+<br/>
+![](/images/design/31.gif)
+<br/>
+图4 双向适配器模式的结构图
+```java
+package adapter;
+//目标接口
+interface TwoWayTarget
+{
+    public void request();
+}
+//适配者接口
+interface TwoWayAdaptee
+{
+    public void specificRequest();
+}
+//目标实现
+class TargetRealize implements TwoWayTarget
+{
+    public void request()
+    {       
+        System.out.println("目标代码被调用！");
+    }
+}
+//适配者实现
+class AdapteeRealize implements TwoWayAdaptee
+{
+    public void specificRequest()
+    {       
+        System.out.println("适配者代码被调用！");
+    }
+}
+//双向适配器
+class TwoWayAdapter  implements TwoWayTarget,TwoWayAdaptee
+{
+    private TwoWayTarget target;
+    private TwoWayAdaptee adaptee;
+    public TwoWayAdapter(TwoWayTarget target)
+    {
+        this.target=target;
+    }
+    public TwoWayAdapter(TwoWayAdaptee adaptee)
+    {
+        this.adaptee=adaptee;
+    }
+    public void request()
+    {
+        adaptee.specificRequest();
+    }
+    public void specificRequest()
+    {       
+        target.request();
+    }
+}
+//客户端代码
+public class TwoWayAdapterTest
+{
+    public static void main(String[] args)
+    {
+        System.out.println("目标通过双向适配器访问适配者：");
+        TwoWayAdaptee adaptee=new AdapteeRealize();
+        TwoWayTarget target=new TwoWayAdapter(adaptee);
+        target.request();
+        System.out.println("-------------------");
+        System.out.println("适配者通过双向适配器访问目标：");
+        target=new TargetRealize();
+        adaptee=new TwoWayAdapter(target);
+        adaptee.specificRequest();
+    }
+}
+```
+```info
+程序的运行结果如下：
+目标通过双向适配器访问适配者：
+适配者代码被调用！
+-------------------
+适配者通过双向适配器访问目标：
+目标代码被调用！
+```
+
+## 8.桥接模式（Bridge模式）详解
+在现实生活中，某些类具有两个或多个维度的变化，如图形既可按形状分，又可按颜色分。如何设计类似于 Photoshop 这样的软件，能画不同形状和不同颜色的图形呢？如果用继承方式，m 种形状和 n 种颜色的图形就有 m×n 种，不但对应的子类很多，而且扩展困难。
+<br/>
+当然，这样的例子还有很多，如不同颜色和字体的文字、不同品牌和功率的汽车、不同性别和职业的男女、支持不同平台和不同文件格式的媒体播放器等。如果用桥接模式就能很好地解决这些问题。
+### 桥接模式的定义与特点
+桥接（Bridge）模式的定义如下：将抽象与实现分离，使它们可以独立变化。它是用组合关系代替继承关系来实现，从而降低了抽象和实现这两个可变维度的耦合度。
+<br/>
+<br/>
+桥接（Bridge）模式的优点是：
+- 由于抽象与实现分离，所以扩展能力强；
+- 其实现细节对客户透明。
+<br/>
+缺点是：由于聚合关系建立在抽象层，要求开发者针对抽象化进行设计与编程，这增加了系统的理解与设计难度。
+
+### 桥接模式的结构与实现
+可以将抽象化部分与实现化部分分开，取消二者的继承关系，改用组合关系。
+#### 1. 模式的结构
+桥接（Bridge）模式包含以下主要角色。
+- 1.抽象化（Abstraction）角色：定义抽象类，并包含一个对实现化对象的引用。
+- 2.扩展抽象化（Refined    Abstraction）角色：是抽象化角色的子类，实现父类中的业务方法，并通过组合关系调用实现化角色中的业务方法。
+- 3.实现化（Implementor）角色：定义实现化角色的接口，供扩展抽象化角色调用。
+- 4.具体实现化（Concrete Implementor）角色：给出实现化角色接口的具体实现。
+<br/>
+![](/images/design/32.gif)
+<br/>
+图1 桥接模式的结构图
+<br/>
+
+#### 2. 模式的实现
+
+
+
+
+
+
+
+```java
+package bridge;
+public class BridgeTest
+{
+    public static void main(String[] args)
+    {
+        Implementor imple=new ConcreteImplementorA();
+        Abstraction abs=new RefinedAbstraction(imple);
+        abs.Operation();
+    }
+}
+//实现化角色
+interface Implementor
+{
+    public void OperationImpl();
+}
+//具体实现化角色
+class ConcreteImplementorA implements Implementor
+{
+    public void OperationImpl()
+    {
+        System.out.println("具体实现化(Concrete Implementor)角色被访问" );
+    }
+}
+//抽象化角色
+abstract class Abstraction
+{
+   protected Implementor imple;
+   protected Abstraction(Implementor imple)
+   {
+       this.imple=imple;
+   }
+   public abstract void Operation();   
+}
+//扩展抽象化角色
+class RefinedAbstraction extends Abstraction
+{
+   protected RefinedAbstraction(Implementor imple)
+   {
+       super(imple);
+   }
+   public void Operation()
+   {
+       System.out.println("扩展抽象化(Refined Abstraction)角色被访问" );
+       imple.OperationImpl();
+   }
+}
+```
+```info
+程序的运行结果如下：
+扩展抽象化(Refined Abstraction)角色被访问
+具体实现化(Concrete Implementor)角色被访问
+```
+
+### 桥接模式的应用实例
+
+#### 【例1】用桥接（Bridge）模式模拟女士皮包的选购。
+分析：女士皮包有很多种，可以按用途分、按皮质分、按品牌分、按颜色分、按大小分等，存在多个维度的变化，所以采用桥接模式来实现女士皮包的选购比较合适。
+
+<br/>
+本实例按用途分可选钱包（Wallet）和挎包（HandBag），按颜色分可选黄色（Yellow）和红色（Red）。可以按两个维度定义为颜色类和包类。（[点此下载本实例所要显示的包的图片](http://c.biancheng.net/uploads/soft/181113/3-1Q115125U5.zip)）。
+<br/>
+客户类通过 ReadXML 类从 XML 配置文件中获取包信息（[此下载 XML 配置文件](http://c.biancheng.net/uploads/soft/181113/3-1Q115130045.zip)），并把选到的产品通过窗体显示出现，图 2 所示是其结构图。
+
+```java
+package bridge;
+import java.awt.*;
+import javax.swing.*;
+public class BagManage
+{
+    public static void main(String[] args)
+    {
+        Color color;
+        Bag bag;
+        color=(Color)ReadXML.getObject("color");
+        bag=(Bag)ReadXML.getObject("bag");
+        bag.setColor(color);
+        String name=bag.getName();
+        show(name);
+    }
+    public static void show(String name)
+    {
+        JFrame jf=new JFrame("桥接模式测试");
+        Container contentPane=jf.getContentPane();
+        JPanel p=new JPanel();   
+        JLabel l=new JLabel(new ImageIcon("src/bridge/"+name+".jpg"));
+        p.setLayout(new GridLayout(1,1));
+        p.setBorder(BorderFactory.createTitledBorder("女士皮包"));
+        p.add(l);
+        contentPane.add(p, BorderLayout.CENTER);
+        jf.pack();  
+        jf.setVisible(true);
+        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+}
+//实现化角色：颜色
+interface Color
+{
+    String getColor();
+}
+//具体实现化角色：黄色
+class Yellow implements Color
+{
+    public String getColor()
+    {
+        return "yellow";
+    }
+}
+//具体实现化角色：红色
+class Red implements Color
+{
+    public String getColor()
+    {
+        return "red";
+    }
+}
+//抽象化角色：包
+abstract class Bag
+{
+    protected Color color;
+    public void setColor(Color color)
+    {
+        this.color=color;
+    }   
+    public abstract String getName();
+}
+//扩展抽象化角色：挎包
+class HandBag extends Bag
+{
+    public String getName()
+    {
+        return color.getColor()+"HandBag";
+    }   
+}
+//扩展抽象化角色：钱包
+class Wallet extends Bag
+{
+    public String getName()
+    {
+        return color.getColor()+"Wallet";
+    }   
+}
+
+```
+```java
+package bridge;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
+import java.io.*;
+class ReadXML
+{
+    public static Object getObject(String args)
+    {
+        try
+        {
+            DocumentBuilderFactory dFactory=DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder=dFactory.newDocumentBuilder();
+            Document doc;                           
+            doc=builder.parse(new File("src/bridge/config.xml"));
+            NodeList nl=doc.getElementsByTagName("className");
+            Node classNode=null;
+            if(args.equals("color"))
+            {
+                classNode=nl.item(0).getFirstChild();
+            }
+            else if(args.equals("bag"))
+            {
+                classNode=nl.item(1).getFirstChild();
+            }          
+            String cName="bridge."+classNode.getNodeValue();
+            Class<?> c=Class.forName(cName);
+              Object obj=c.newInstance();
+            return obj;
+        }  
+        catch(Exception e)
+        {
+               e.printStackTrace();
+               return null;
+        }
+    }
+}
+```
+
+### 桥接模式的应用场景
+桥接模式通常适用于以下场景。
+- 1.当一个类存在两个独立变化的维度，且这两个维度都需要进行扩展时。
+- 2.当一个系统不希望使用继承或因为多层次继承导致系统类的个数急剧增加时。
+- 3.当一个系统需要在构件的抽象化角色和具体化角色之间增加更多的灵活性时。
+### 桥接模式模式的扩展
+在软件开发中，有时桥接（[Bridge](http://c.biancheng.net/view/1361.html)）模式可与适配器模式联合使用。当桥接（Bridge）模式的实现化角色的接口与现有类的接口不一致时，可以在二者中间定义一个适配器将二者连接起来，其具体结构图如图 5 所示
+<br/>
+![](/images/design/33.gif)
+<br/>
+图5 桥接模式与适配器模式联用的结构图
+
+### 桥接和适配的组合
+也以钱包位列： 
+女士皮包: 本实例按用途分可选钱包（Wallet）和挎包（HandBag），按颜色分可选黄色（Yellow）和红色（Red）
+我们可以定义钱包的用途，这里为了简单，我们的用途就作为的枚举(定义对应的类也可以只要提供获取对应用途的名称也可以)
+<br/>
+具体的代码：
+```java
+package com.wu.qiang.bridge.adapter;
+
+/**
+ * 适配的目标(target)
+ * 桥接的抽象化()
+ * @auth wq on 2019/12/9 14:53
+ **/
+public interface Color {
+    String getColor();
+}
+
+```
+```java
+package com.wu.qiang.bridge.adapter;
+
+/**
+ * 红色
+ * 桥接：扩展实现化
+ * 适配：适配者
+ * @auth wq on 2019/12/9 14:55
+ **/
+public class Red implements Color {
+    @Override
+    public String getColor() {
+        return "red";
+    }
+}
+
+```
+```java
+package com.wu.qiang.bridge.adapter;
+
+/**
+ * 黄色
+ * 桥接：扩展实现化
+ * 适配：适配者
+ * @auth wq on 2019/12/9 14:57
+ **/
+public class Yellow implements Color {
+    @Override
+    public String getColor() {
+        return "yellow";
+    }
+}
+
+```
+```java
+package com.wu.qiang.bridge.adapter;
+
+/**
+ * 颜色适配器
+ * @auth wq on 2019/12/9 15:31
+ **/
+public class ColorAdapter implements Color{
+    private Color color;
+    public ColorAdapter(Color color){
+        this.color = color;
+    }
+    @Override
+    public String getColor() {
+        return color.getColor();
+    }
+}
+
+```
+```java
+package com.wu.qiang.bridge.adapter;
+
+/**
+* 包的实现化：提供实现化的接口
+ * @auth wq on 2019/12/9 15:11
+ **/
+public abstract class Bag {
+    protected Color color;
+    protected Bag(Color color) {
+        this.color = color;
+    }
+
+    public abstract String getName();
+}
+
+```
+```java
+package com.wu.qiang.bridge.adapter;
+
+/**
+*  包的适配器.
+*  在桥接模式中：具体实现化
+ * @auth wq on 2019/12/9 15:34
+ **/
+public class BagAdapter extends Bag{
+    private BagEnum name;
+    public BagAdapter(Color color, BagEnum name) {
+        super(color);
+        this.name = name;
+    }
+    @Override
+    public String getName() {
+        return color.getColor() + name.toString();
+    }
+    // 包的用途分类
+    public enum BagEnum{
+        // 钱包
+        Wallet,
+        // 挎包
+        HandBag
+    }
+}
+
+```
+测试：使用适配器模式和桥接模式的测试
+```java{18-24}
+package com.wu.qiang.bridge.adapter;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.GridLayout;
+
+/**
+ * @auth wq on 2019/12/9 15:18
+ **/
+public class BagManage {
+    public static void main(String[] args) {
+        // 适配模式：获取 适配器,颜色适配器，根据传递的颜色，确定具体调用那种颜色
+        Color color = new ColorAdapter(new Red());
+//        Bag bag = new HandBag(color);
+        // 桥接模式： 获取  抽象化角色，并且使用这个适配器来创建对象或者做一个set方法，这里使用的是构造函数
+        // Bag bag = new Wallet(color);
+        Bag bag = new BagAdapter(color, BagAdapter.BagEnum.HandBag);
+        // 使用桥接模式的 抽象化接口
+        show(bag.getName());
+    }
+    public static void show(String name)
+    {
+        JFrame jf=new JFrame("桥接模式测试");
+        Container contentPane=jf.getContentPane();
+        JPanel p=new JPanel();
+        JLabel l=new JLabel(new ImageIcon("src/main/resources/bridge/"+name+".jpg"));
+        p.setLayout(new GridLayout(1,1));
+        p.setBorder(BorderFactory.createTitledBorder("女士皮包"));
+        p.add(l);
+        contentPane.add(p, BorderLayout.CENTER);
+        jf.pack();
+        jf.setVisible(true);
+        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+
+}
+```
+
+
+## 9.装饰模式（装饰设计模式）详解
+在现实生活中，常常需要对现有产品增加新的功能或美化其外观，如房子装修、相片加相框等。在软件开发过程中，有时想用一些现存的组件。这些组件可能只是完成了一些核心功能。但在不改变其结构的情况下，可以动态地扩展其功能。所有这些都可以釆用装饰模式来实现。
+### 装饰模式的定义与特点
+装饰（Decorator）模式的定义：指在不改变现有对象结构的情况下，动态地给该对象增加一些职责（即增加其额外功能）的模式，它属于对象结构型模式。
+<br/>
+装饰（Decorator）模式的主要优点有：
+- 采用装饰模式扩展对象的功能比采用继承方式更加灵活。
+- 可以设计出多个不同的具体装饰类，创造出多个不同行为的组合。
+<br/>
+其主要缺点是：装饰模式增加了许多子类，如果过度使用会使程序变得很复杂。
+### 装饰模式的结构与实现
+通常情况下，扩展一个类的功能会使用继承方式来实现。但继承具有静态特征，耦合度高，并且随着扩展功能的增多，子类会很膨胀。如果使用组合关系来创建一个包装对象（即装饰对象）来包裹真实对象，并在保持真实对象的类结构不变的前提下，为其提供额外的功能，这就是装饰模式的目标。下面来分析其基本结构和实现方法。
+
+#### 1. 模式的结构
+装饰模式主要包含以下角色。
+- 抽象构件（Component）角色：定义一个抽象接口以规范准备接收附加责任的对象。
+- 具体构件（Concrete    Component）角色：实现抽象构件，通过装饰角色为其添加一些职责。
+- 抽象装饰（Decorator）角色：继承抽象构件，并包含具体构件的实例，可以通过其子类扩展具体构件的功能。
+- 具体装饰（ConcreteDecorator）角色：实现抽象装饰的相关方法，并给具体构件对象添加附加的责任。
+<br/>
+![](/images/design/34.gif)
+<br/>
+#### 2. 模式的实现
+```java
+package decorator;
+public class DecoratorPattern
+{
+    public static void main(String[] args)
+    {
+        Component p=new ConcreteComponent();
+        p.operation();
+        System.out.println("---------------------------------");
+        Component d=new ConcreteDecorator(p);
+        d.operation();
+    }
+}
+//抽象构件角色
+interface  Component
+{
+    public void operation();
+}
+//具体构件角色
+class ConcreteComponent implements Component
+{
+    public ConcreteComponent()
+    {
+        System.out.println("创建具体构件角色");       
+    }   
+    public void operation()
+    {
+        System.out.println("调用具体构件角色的方法operation()");           
+    }
+}
+//抽象装饰角色
+class Decorator implements Component
+{
+    private Component component;   
+    public Decorator(Component component)
+    {
+        this.component=component;
+    }   
+    public void operation()
+    {
+        component.operation();
+    }
+}
+//具体装饰角色
+class ConcreteDecorator extends Decorator
+{
+    public ConcreteDecorator(Component component)
+    {
+        super(component);
+    }   
+    public void operation()
+    {
+        super.operation();
+        addedFunction();
+    }
+    public void addedFunction()
+    {
+        System.out.println("为具体构件角色增加额外的功能addedFunction()");           
+    }
+}
+```
+
+```info
+程序运行结果如下：
+创建具体构件角色
+调用具体构件角色的方法operation()
+---------------------------------
+调用具体构件角色的方法operation()
+为具体构件角色增加额外的功能addedFunction()
+```
+
+### 装饰模式的应用实例
+#### 【例1】用装饰模式实现游戏角色“莫莉卡·安斯兰”的变身。
+分析：在《恶魔战士》中，游戏角色“莫莉卡·安斯兰”的原身是一个可爱少女，但当她变身时，会变成头顶及背部延伸出蝙蝠状飞翼的女妖，当然她还可以变为穿着漂亮外衣的少女。这些都可用装饰模式来实现，在本实例中的“莫莉卡”原身有 setImage(String t) 方法决定其显示方式，而其 变身“蝙蝠状女妖”和“着装少女”可以用 setChanger() 方法来改变其外观，原身与变身后的效果用 display() 方法来显示（[点此下载其原身和变身后的图片](http://c.biancheng.net/uploads/soft/181113/3-1Q115142F6.zip)），图 2 所示是其结构图。
+<br/>
+![](/images/design/35.gif)
+<br/>
+```java
+package decorator;
+import java.awt.*;
+import javax.swing.*;
+public class MorriganAensland
+{
+    public static void main(String[] args)
+    {
+        Morrigan m0=new original();
+        m0.display();
+        Morrigan m1=new Succubus(m0);
+        m1.display();
+        Morrigan m2=new Girl(m0);
+        m2.display();
+    }
+}
+//抽象构件角色：莫莉卡
+interface  Morrigan
+{
+    public void display();
+}
+//具体构件角色：原身
+class original extends JFrame implements Morrigan
+{
+    private static final long serialVersionUID = 1L;
+    private String t="Morrigan0.jpg";
+    public original()
+    {
+        super("《恶魔战士》中的莫莉卡·安斯兰");                
+    }
+    public void setImage(String t)
+    {
+        this.t=t;           
+    }
+    public void display()
+    {   
+        this.setLayout(new FlowLayout());
+        JLabel l1=new JLabel(new ImageIcon("src/decorator/"+t));
+        this.add(l1);   
+        this.pack();       
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  
+        this.setVisible(true);
+    }
+}
+//抽象装饰角色：变形
+class Changer implements Morrigan
+{
+    Morrigan m;   
+    public Changer(Morrigan m)
+    {
+        this.m=m;
+    }   
+    public void display()
+    {
+        m.display();
+    }
+}
+//具体装饰角色：女妖
+class Succubus extends Changer
+{
+    public Succubus(Morrigan m)
+    {
+        super(m);
+    }   
+    public void display()
+    {
+        setChanger();
+        super.display();   
+    }
+    public void setChanger()
+    {
+        ((original) super.m).setImage("Morrigan1.jpg");           
+    }
+}
+//具体装饰角色：少女
+class Girl extends Changer
+{
+    public Girl(Morrigan m)
+    {
+        super(m);
+    }   
+    public void display()
+    {
+        setChanger();
+        super.display();   
+    }
+    public void setChanger()
+    {
+        ((original) super.m).setImage("Morrigan2.jpg");           
+    }
+}
+```
+### 装饰模式的应用场景
+前面讲解了关于装饰模式的结构与特点，下面介绍其适用的应用场景，装饰模式通常在以下几种情况使用。
+- 当需要给一个现有类添加附加职责，而又不能采用生成子类的方法进行扩充时。例如，该类被隐藏或者该类是终极类或者采用继承方式会产生大量的子类。
+- 当需要通过对现有的一组基本功能进行排列组合而产生非常多的功能时，采用继承关系很难实现，而采用装饰模式却很好实现。
+- 当对象的功能要求可以动态地添加，也可以再动态地撤销时。
+<br/>
+装饰模式在 [Java](http://c.biancheng.net/java/) 语言中的最著名的应用莫过于 Java I/O 标准库的设计了。例如，InputStream 的子类 FilterInputStream，OutputStream 的子类 FilterOutputStream，Reader 的子类 BufferedReader 以及 FilterReader，还有 Writer 的子类 BufferedWriter、FilterWriter 以及 PrintWriter 等，它们都是抽象装饰类。
+<br/>
+下面代码是为 FileReader 增加缓冲区而采用的装饰类 BufferedReader 的例子：
+```test
+BufferedReader in=new BufferedReader(new FileReader("filename.txtn));
+String s=in.readLine();
+```
+### 装饰模式的扩展
+饰模式所包含的 4 个角色不是任何时候都要存在的，在有些应用环境下模式是可以简化的，如以下两种情况。
+<br/>
+#### (1) 如果只有一个具体构件而没有抽象构件时，可以让抽象装饰继承具体构件，其结构图如图 4 所示。
+![](/images/design/36.gif)
+<br/>
+#### (2) 如果只有一个具体装饰时，可以将抽象装饰和具体装饰合并，其结构图如图 5 所示
+![](/images/design/37.gif)
+
+## 10.外观模式（Facade模式）详解
+在现实生活中，常常存在办事较复杂的例子，如办房产证或注册一家公司，有时要同多个部门联系，这时要是有一个综合部门能解决一切手续问题就好了。
+<br/>
+软件设计也是这样，当一个系统的功能越来越强，子系统会越来越多，客户对系统的访问也变得越来越复杂。这时如果系统内部发生改变，客户端也要跟着改变，这违背了“开闭原则”，也违背了“迪米特法则”，所以有必要为多个子系统提供一个统一的接口，从而降低系统的耦合度，这就是外观模式的目标。
+<br/>
+图 1 给出了客户去当地房产局办理房产证过户要遇到的相关部门。
+<br/>
+![](/images/design/38.gif)
+### 外观模式的定义与特点
+外观（Facade）模式的定义：是一种通过为多个复杂的子系统提供一个一致的接口，而使这些子系统更加容易被访问的模式。该模式对外有一个统一接口，外部应用程序不用关心内部子系统的具体的细节，这样会大大降低应用程序的复杂度，提高了程序的可维护性。
+<br/>
+外观（Facade）模式是“迪米特法则”的典型应用，它有以下主要优点。
+- 1.降低了子系统与客户端之间的耦合度，使得子系统的变化不会影响调用它的客户类。
+- 2.对客户屏蔽了子系统组件，减少了客户处理的对象数目，并使得子系统使用起来更加容易。
+- 3.降低了大型软件系统中的编译依赖性，简化了系统在不同平台之间的移植过程，因为编译一个子系统不会影响其他的子系统，也不会影响外观对象。
+<br/>
+外观（Facade）模式的主要缺点如下。
+- 1.不能很好地限制客户使用子系统类。
+- 2.增加新的子系统可能需要修改外观类或客户端的源代码，违背了“开闭原则”。
+
+### 外观模式的结构与实现
+外观（Facade）模式的结构比较简单，主要是定义了一个高层接口。它包含了对各个子系统的引用，客户端可以通过它访问各个子系统的功能。现在来分析其基本结构和实现方法。
+#### 1. 模式的结构
+外观（Facade）模式包含以下主要角色。
+- 1.外观（Facade）角色：为多个子系统对外提供一个共同的接口。
+- 2.子系统（Sub System）角色：实现系统的部分功能，客户可以通过外观角色访问它。
+- 3.客户（Client）角色：通过一个外观角色访问各个子系统的功能。
+<br/>
+![](/images/design/39.gif)
+
+#### 2. 模式的实现
+```java
+package facade;
+public class FacadePattern
+{
+    public static void main(String[] args)
+    {
+        Facade f=new Facade();
+        f.method();
+    }
+}
+//外观角色
+class Facade
+{
+    private SubSystem01 obj1=new SubSystem01();
+    private SubSystem02 obj2=new SubSystem02();
+    private SubSystem03 obj3=new SubSystem03();
+    public void method()
+    {
+        obj1.method1();
+        obj2.method2();
+        obj3.method3();
+    }
+}
+//子系统角色
+class SubSystem01
+{
+    public  void method1()
+    {
+        System.out.println("子系统01的method1()被调用！");
+    }   
+}
+//子系统角色
+class SubSystem02
+{
+    public  void method2()
+    {
+        System.out.println("子系统02的method2()被调用！");
+    }   
+}
+//子系统角色
+class SubSystem03
+{
+    public  void method3()
+    {
+        System.out.println("子系统03的method3()被调用！");
+    }   
+}
+```
+
+### 外观模式的应用实例
+#### 【例1】用“外观模式”设计一个婺源特产的选购界面。
+分析：本实例的外观角色 WySpecialty 是 JPanel 的子类，它拥有 8 个子系统角色 Specialty1~Specialty8，它们是图标类（ImageIcon）的子类对象，用来保存该婺源特产的图标（[点此下载要显示的婺源特产的图片](http://c.biancheng.net/uploads/soft/181113/3-1Q115152634.zip)）。
+<br/>
+外观类（WySpecialty）用 JTree 组件来管理婺源特产的名称，并定义一个事件处理方法 valueClianged(TreeSelectionEvent e)，当用户从树中选择特产时，该特产的图标对象保存在标签（JLabd）对象中。
+<br/>
+客户窗体对象用分割面板来实现，左边放外观角色的目录树，右边放显示所选特产图像的标签。其结构图如图 3 所示。
+<br/>
+![](/images/design/40.gif)
+<br/>
+```java
+package facade;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+public class WySpecialtyFacade
+{
+    public static void main(String[] args)
+    {
+        JFrame f=new JFrame ("外观模式: 婺源特产选择测试");
+        Container cp=f.getContentPane();       
+        WySpecialty wys=new WySpecialty();       
+        JScrollPane treeView=new JScrollPane(wys.tree);
+        JScrollPane scrollpane=new JScrollPane(wys.label);       
+        JSplitPane splitpane=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,true,treeView,scrollpane); //分割面版
+        splitpane.setDividerLocation(230);     //设置splitpane的分隔线位置
+        splitpane.setOneTouchExpandable(true); //设置splitpane可以展开或收起                       
+        cp.add(splitpane);
+        f.setSize(650,350);
+        f.setVisible(true);   
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+}
+class WySpecialty extends JPanel implements TreeSelectionListener
+{
+    private static final long serialVersionUID=1L;
+    final JTree tree;
+    JLabel label;
+    private Specialty1 s1=new Specialty1();
+    private Specialty2 s2=new Specialty2();
+    private Specialty3 s3=new Specialty3();
+    private Specialty4 s4=new Specialty4();
+    private Specialty5 s5=new Specialty5();
+    private Specialty6 s6=new Specialty6();
+    private Specialty7 s7=new Specialty7();
+    private Specialty8 s8=new Specialty8();
+    WySpecialty(){       
+        DefaultMutableTreeNode top=new DefaultMutableTreeNode("婺源特产");
+        DefaultMutableTreeNode node1=null,node2=null,tempNode=null;       
+        node1=new DefaultMutableTreeNode("婺源四大特产（红、绿、黑、白）");
+        tempNode=new DefaultMutableTreeNode("婺源荷包红鲤鱼");
+        node1.add(tempNode);
+        tempNode=new DefaultMutableTreeNode("婺源绿茶");
+        node1.add(tempNode);
+        tempNode=new DefaultMutableTreeNode("婺源龙尾砚");
+        node1.add(tempNode);
+        tempNode=new DefaultMutableTreeNode("婺源江湾雪梨");
+        node1.add(tempNode);
+        top.add(node1);           
+        node2=new DefaultMutableTreeNode("婺源其它土特产");
+        tempNode=new DefaultMutableTreeNode("婺源酒糟鱼");
+        node2.add(tempNode);
+        tempNode=new DefaultMutableTreeNode("婺源糟米子糕");
+        node2.add(tempNode);
+        tempNode=new DefaultMutableTreeNode("婺源清明果");
+        node2.add(tempNode);
+        tempNode=new DefaultMutableTreeNode("婺源油煎灯");
+        node2.add(tempNode);
+        top.add(node2);           
+        tree=new JTree(top);
+        tree.addTreeSelectionListener(this);
+        label=new JLabel();
+    }   
+    public void valueChanged(TreeSelectionEvent e)
+    {
+        if(e.getSource()==tree)
+        {
+            DefaultMutableTreeNode node=(DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            if(node==null) return;
+            if(node.isLeaf())
+            {
+                Object object=node.getUserObject();
+                String sele=object.toString();
+                label.setText(sele);
+                label.setHorizontalTextPosition(JLabel.CENTER);
+                label.setVerticalTextPosition(JLabel.BOTTOM);
+                sele=sele.substring(2,4);
+                if(sele.equalsIgnoreCase("荷包")) label.setIcon(s1);
+                else if(sele.equalsIgnoreCase("绿茶")) label.setIcon(s2);
+                else if(sele.equalsIgnoreCase("龙尾")) label.setIcon(s3);
+                else if(sele.equalsIgnoreCase("江湾")) label.setIcon(s4);
+                else if(sele.equalsIgnoreCase("酒糟")) label.setIcon(s5);
+                else if(sele.equalsIgnoreCase("糟米")) label.setIcon(s6);
+                else if(sele.equalsIgnoreCase("清明")) label.setIcon(s7);
+                else if(sele.equalsIgnoreCase("油煎")) label.setIcon(s8);
+                label.setHorizontalAlignment(JLabel.CENTER);
+            }
+        }               
+    }
+}
+class Specialty1 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty1()
+    {
+        super("src/facade/WyImage/Specialty11.jpg");
+    }
+}
+class Specialty2 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty2()
+    {
+        super("src/facade/WyImage/Specialty12.jpg");
+    }
+}
+class Specialty3 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty3()
+    {
+        super("src/facade/WyImage/Specialty13.jpg");
+    }
+}
+class Specialty4 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty4()
+    {
+        super("src/facade/WyImage/Specialty14.jpg");
+    }
+}
+class Specialty5 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty5()
+    {
+        super("src/facade/WyImage/Specialty21.jpg");
+    }
+}
+class Specialty6 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty6()
+    {
+        super("src/facade/WyImage/Specialty22.jpg");
+    }
+}
+class Specialty7 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty7()
+    {
+        super("src/facade/WyImage/Specialty23.jpg");
+    }
+}
+class Specialty8 extends ImageIcon
+{
+    private static final long serialVersionUID=1L;
+    Specialty8()
+    {
+        super("src/facade/WyImage/Specialty24.jpg");
+    }
+}
+```
+
+### 外观模式的应用场景
+通常在以下情况下可以考虑使用外观模式。
+- 对分层结构系统构建时，使用外观模式定义子系统中每层的入口点可以简化子系统之间的依赖关系。
+- 当一个复杂系统的子系统很多时，外观模式可以为系统设计一个简单的接口供外界访问。
+- 当客户端与多个子系统之间存在很大的联系时，引入外观模式可将它们分离，从而提高子系统的独立性和可移植性。
+
+### 外观模式的扩展
+在外观模式中，当增加或移除子系统时需要修改外观类，这违背了“开闭原则”。如果引入抽象外观类，则在一定程度上解决了该问题，其结构图如图 5 所示。
+<br/>
+![](/images/design/41.gif)
+
+
+
+
 
 
 
