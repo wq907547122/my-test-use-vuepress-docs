@@ -2907,7 +2907,1623 @@ class Specialty8 extends ImageIcon
 <br/>
 ![](/images/design/41.gif)
 
+## 11.享元模式（详解版）
+在面向对象程序设计过程中，有时会面临要创建大量相同或相似对象实例的问题。创建那么多的对象将会耗费很多的系统资源，它是系统性能提高的一个瓶颈。例如，围棋和五子棋中的黑白棋子，图像中的坐标点或颜色，局域网中的路由器、交换机和集线器，教室里的桌子和凳子等。这些对象有很多相似的地方，如果能把它们相同的部分提取出来共享，则能节省大量的系统资源，这就是享元模式的产生背景。
 
+### 享元模式的定义与特点
+享元（Flyweight）模式的定义：运用共享技术来有効地支持大量细粒度对象的复用。它通过共享已经存在的又橡来大幅度减少需要创建的对象数量、避免大量相似类的开销，从而提高系统资源的利用率。
+<br/>
+享元模式的主要优点是：相同对象只要保存一份，这降低了系统中对象的数量，从而降低了系统中细粒度对象给内存带来的压力。
+<br/>
+其主要缺点是：
+- 1.为了使对象可以共享，需要将一些不能共享的状态外部化，这将增加程序的复杂性。
+- 2.读取享元模式的外部状态会使得运行时间稍微变长。
+
+### 享元模式的结构与实现
+享元模式中存在以下两种状态：
+- 1.内部状态，即不会随着环境的改变而改变的可共享部分；
+- 2.外部状态，指随环境改变而改变的不可以共享的部分。享元模式的实现要领就是区分应用中的这两种状态，并将外部状态外部化。下面来分析其基本结构和实现方法。
+
+#### 1. 模式的结构
+享元模式的主要角色有如下。
+- 1.抽象享元角色（Flyweight）:是所有的具体享元类的基类，为具体享元规范需要实现的公共接口，非享元的外部状态以参数的形式通过方法传入。
+- 2.具体享元（Concrete Flyweight）角色：实现抽象享元角色中所规定的接口。
+- 3.非享元（Unsharable Flyweight)角色：是不可以共享的外部状态，它以参数的形式注入具体享元的相关方法中。
+- 4.享元工厂（Flyweight Factory）角色：负责创建和管理享元角色。当客户对象请求一个享元对象时，享元工厂检査系统中是否存在符合要求的享元对象，如果存在则提供给客户；如果不存在的话，则创建一个新的享元对象。
+
+<br/>
+图 1 是享元模式的结构图。图中的 UnsharedConcreteFlyweight 是与淳元角色，里面包含了非共享的外部状态信息 info；而 Flyweight 是抽象享元角色，里面包含了享元方法 operation(UnsharedConcreteFlyweight state)，非享元的外部状态以参数的形式通过该方法传入；ConcreteFlyweight 是具体享元角色，包含了关键字 key，它实现了抽象享元接口；FlyweightFactory 是享元工厂角色，它逝关键字 key 来管理具体享元；客户角色通过享元工厂获取具体享元，并访问具体享元的相关方法。
+<br/>
+![](/images/design/42.gif)
+<br/>
+图1 享元模式的结构图
+
+#### 2. 模式的实现
+享元模式的实现代码如下：
+```java
+package flyweight;
+import java.util.HashMap;
+public class FlyweightPattern
+{
+    public static void main(String[] args)
+    {
+        FlyweightFactory factory=new FlyweightFactory();
+        Flyweight f01=factory.getFlyweight("a");
+        Flyweight f02=factory.getFlyweight("a");
+        Flyweight f03=factory.getFlyweight("a");
+        Flyweight f11=factory.getFlyweight("b");
+        Flyweight f12=factory.getFlyweight("b");       
+        f01.operation(new UnsharedConcreteFlyweight("第1次调用a。"));       
+        f02.operation(new UnsharedConcreteFlyweight("第2次调用a。"));       
+        f03.operation(new UnsharedConcreteFlyweight("第3次调用a。"));       
+        f11.operation(new UnsharedConcreteFlyweight("第1次调用b。"));       
+        f12.operation(new UnsharedConcreteFlyweight("第2次调用b。"));
+    }
+}
+//非享元角色
+class UnsharedConcreteFlyweight
+{
+    private String info;
+    UnsharedConcreteFlyweight(String info)
+    {
+        this.info=info;
+    }
+    public String getInfo()
+    {
+        return info;
+    }
+    public void setInfo(String info)
+    {
+        this.info=info;
+    }
+}
+//抽象享元角色
+interface Flyweight
+{
+    public void operation(UnsharedConcreteFlyweight state);
+}
+//具体享元角色
+class ConcreteFlyweight implements Flyweight
+{
+    private String key;
+    ConcreteFlyweight(String key)
+    {
+        this.key=key;
+        System.out.println("具体享元"+key+"被创建！");
+    }
+    public void operation(UnsharedConcreteFlyweight outState)
+    {
+        System.out.print("具体享元"+key+"被调用，");
+        System.out.println("非享元信息是:"+outState.getInfo());
+    }
+}
+//享元工厂角色
+class FlyweightFactory
+{
+    private HashMap<String, Flyweight> flyweights=new HashMap<String, Flyweight>();
+    public Flyweight getFlyweight(String key)
+    {
+        Flyweight flyweight=(Flyweight)flyweights.get(key);
+        if(flyweight!=null)
+        {
+            System.out.println("具体享元"+key+"已经存在，被成功获取！");
+        }
+        else
+        {
+            flyweight=new ConcreteFlyweight(key);
+            flyweights.put(key, flyweight);
+        }
+        return flyweight;
+    }
+}
+```
+
+### 享元模式的应用实例
+#### 【例1】享元模式在五子棋游戏中的应用。
+分析：五子棋同围棋一样，包含多个“黑”或“白”颜色的棋子，所以用享元模式比较好。
+<br/>
+本实例中的棋子（ChessPieces）类是抽象享元角色，它包含了一个落子的 DownPieces(Graphics g,Point pt) 方法；白子（WhitePieces）和黑子（BlackPieces）类是具体享元角色，它实现了落子方法；Point 是非享元角色，它指定了落子的位置；WeiqiFactory 是享元工厂角色，它通过 ArrayList 来管理棋子，并且提供了获取白子或者黑子的 getChessPieces(String type) 方法；客户类（Chessboard）利用 Graphics 组件在框架窗体中绘制一个棋盘，并实现 mouseClicked(MouseEvent e) 事件处理方法，该方法根据用户的选择从享元工厂中获取白子或者黑子并落在棋盘上。图 2 所示是其结构图。
+<br/>
+![](/images/design/43.gif)
+<br/>
+图2 五子棋游戏的结构图
+<br/>
+程序代码如下：
+```java
+package flyweight;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import javax.swing.*;
+public class WzqGame
+{
+    public static void main(String[] args)
+    {
+        new Chessboard();
+    }
+}
+//棋盘
+class Chessboard extends MouseAdapter
+{
+    WeiqiFactory wf;
+    JFrame f;   
+    Graphics g;
+    JRadioButton wz;
+    JRadioButton bz;
+    private final int x=50;
+    private final int y=50;
+    private final int w=40;    //小方格宽度和高度
+    private final int rw=400;    //棋盘宽度和高度
+    Chessboard()
+    {
+        wf=new WeiqiFactory();
+        f=new JFrame("享元模式在五子棋游戏中的应用");
+        f.setBounds(100,100,500,550);
+        f.setVisible(true);       
+        f.setResizable(false);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel SouthJP=new JPanel();
+        f.add("South",SouthJP);
+        wz=new JRadioButton("白子");
+        bz=new JRadioButton("黑子",true);
+        ButtonGroup group=new ButtonGroup();
+        group.add(wz);
+        group.add(bz);
+        SouthJP.add(wz);
+        SouthJP.add(bz);      
+        JPanel CenterJP=new JPanel();
+        CenterJP.setLayout(null);
+        CenterJP.setSize(500, 500);
+        CenterJP.addMouseListener(this);
+        f.add("Center",CenterJP);      
+        try
+        {
+            Thread.sleep(500);
+        }
+        catch(InterruptedException e)
+        {
+            e.printStackTrace();
+        }               
+        g=CenterJP.getGraphics();
+        g.setColor(Color.BLUE);   
+        g.drawRect(x, y, rw, rw);
+        for(int i=1;i<10;i++)
+        {
+            //绘制第i条竖直线
+            g.drawLine(x+(i*w),y,x+(i*w),y+rw);
+            //绘制第i条水平线
+            g.drawLine(x,y+(i*w),x+rw,y+(i*w));
+        }   
+    }
+    public void mouseClicked(MouseEvent e)
+    {
+        Point pt=new Point(e.getX()-15,e.getY()-15);
+        if(wz.isSelected())
+        {
+            ChessPieces c1=wf.getChessPieces("w");
+            c1.DownPieces(g,pt);
+        }
+        else if(bz.isSelected())
+        {
+            ChessPieces c2=wf.getChessPieces("b");       
+            c2.DownPieces(g,pt);  
+        }
+    }
+}
+//抽象享元角色：棋子
+interface ChessPieces
+{
+    public void DownPieces(Graphics g,Point pt);    //下子
+}
+//具体享元角色：白子
+class WhitePieces implements ChessPieces
+{
+    public void DownPieces(Graphics g,Point pt)
+    {       
+        g.setColor(Color.WHITE);
+        g.fillOval(pt.x,pt.y,30,30);
+    }
+}
+//具体享元角色：黑子
+class BlackPieces implements ChessPieces
+{
+    public void DownPieces(Graphics g,Point pt)
+    {
+        g.setColor(Color.BLACK);
+        g.fillOval(pt.x,pt.y,30,30);
+    }
+}
+//享元工厂角色
+class WeiqiFactory
+{
+    private ArrayList<ChessPieces> qz;   
+    public WeiqiFactory()
+    {
+        qz=new ArrayList<ChessPieces>();
+        ChessPieces w=new WhitePieces();
+        qz.add(w);
+        ChessPieces b=new BlackPieces();
+        qz.add(b);
+    }   
+    public ChessPieces getChessPieces(String type)
+    {
+        if(type.equalsIgnoreCase("w"))
+        {
+            return (ChessPieces)qz.get(0);
+        }
+        else if(type.equalsIgnoreCase("b"))
+        {
+            return (ChessPieces)qz.get(1);
+        }
+        else
+        {
+            return null;
+        }
+    }
+}
+```
+
+### 享元模式的应用场景
+前面分析了享元模式的结构与特点，下面分析它适用的应用场景。享元模式是通过减少内存中对象的数量来节省内存空间的，所以以下几种情形适合采用享元模式。
+- 1.系统中存在大量相同或相似的对象，这些对象耗费大量的内存资源。
+- 2.大部分的对象可以按照内部状态进行分组，且可将不同部分外部化，这样每一个组只需保存一个内部状态。
+- 3.由于享元模式需要额外维护一个保存享元的数据结构，所以应当在有足够多的享元实例时才值得使用享元模式。
+
+### 享元模式的扩展
+在前面介绍的享元模式中，其结构图通常包含可以共享的部分和不可以共享的部分。在实际使用过程中，有时候会稍加改变，即存在两种特殊的享元模式：单纯享元模式和复合享元模式，下面分别对它们进行简单介绍。
+
+#### (1) 单纯享元模式，这种享元模式中的所有的具体享元类都是可以共享的，不存在非共享的具体享元类，其结构图如图 4 所示
+![](/images/design/44.gif)
+<br/>
+图4 单纯享元模式的结构图
+#### (2) 复合享元模式，这种享元模式中的有些享元对象是由一些单纯享元对象组合而成的，它们就是复合享元对象。虽然复合享元对象本身不能共享，但它们可以分解成单纯享元对象再被共享，其结构图如图 5 所示。
+![](/images/design/45.gif)
+
+## 12.组合模式（详解版）
+在现实生活中，存在很多“部分-整体”的关系，例如，大学中的部门与学院、总公司中的部门与分公司、学习用品中的书与书包、生活用品中的衣月艮与衣柜以及厨房中的锅碗瓢盆等。在软件开发中也是这样，例如，文件系统中的文件与文件夹、窗体程序中的简单控件与容器控件等。对这些简单对象与复合对象的处理，如果用组合模式来实现会很方便。
+
+### 组合模式的定义与特点
+组合（Composite）模式的定义：有时又叫作部分-整体模式，它是一种将对象组合成树状的层次结构的模式，用来表示“部分-整体”的关系，使用户对单个对象和组合对象具有一致的访问性。
+<br/>
+组合模式的主要优点有：
+- 1.组合模式使得客户端代码可以一致地处理单个对象和组合对象，无须关心自己处理的是单个对象，还是组合对象，这简化了客户端代码；
+- 2.更容易在组合体内加入新的对象，客户端不会因为加入了新的对象而更改源代码，满足“开闭原则”；
+<br/>
+其主要缺点是：
+- 设计较复杂，客户端需要花更多时间理清类之间的层次关系；
+- 不容易限制容器中的构件；
+- 不容易用继承的方法来增加构件的新功能；
+### 组合模式的结构与实现
+组合模式的结构不是很复杂，下面对它的结构和实现进行分析。
+#### 1. 模式的结构
+组合模式包含以下主要角色。
+- 1.抽象构件（Component）角色：它的主要作用是为树叶构件和树枝构件声明公共接口，并实现它们的默认行为。在透明式的组合模式中抽象构件还声明访问和管理子类的接口；在安全式的组合模式中不声明访问和管理子类的接口，管理工作由树枝构件完成。
+- 2.树叶构件（Leaf）角色：是组合中的叶节点对象，它没有子节点，用于实现抽象构件角色中 声明的公共接口。
+- 3.树枝构件（Composite）角色：是组合中的分支节点对象，它有子节点。它实现了抽象构件角色中声明的接口，它的主要作用是存储和管理子部件，通常包含 Add()、Remove()、GetChild() 等方法。
+<br/>
+组合模式分为透明式的组合模式和安全式的组合模式。
+<br/>
+(1) 透明方式：在该方式中，由于抽象构件声明了所有子类中的全部方法，所以客户端无须区别树叶对象和树枝对象，对客户端来说是透明的。但其缺点是：树叶构件本来没有 Add()、Remove() 及 GetChild() 方法，却要实现它们（空实现或抛异常），这样会带来一些安全性问题。其结构图如图 1 所示。
+<br/>
+![](/images/design/46.gif)
+<br/>
+图1 透明式的组合模式的结构图
+<br/>
+(2) 安全方式：在该方式中，将管理子构件的方法移到树枝构件中，抽象构件和树叶构件没有对子对象的管理方法，这样就避免了上一种方式的安全性问题，但由于叶子和分支有不同的接口，客户端在调用时要知道树叶对象和树枝对象的存在，所以失去了透明性。其结构图如图 2 所示。
+<br/>
+![](/images/design/47.gif)
+<br/>
+图2 安全式的组合模式的结构图
+<br/>
+#### 2. 模式的实现
+假如要访问集合 c0={leaf1,{leaf2,leaf3}} 中的元素，其对应的树状图如图 3 所示。
+![](/images/design/48.gif)
+<br/>
+图3 集合c0的树状图
+<br/>
+下面给出透明式的组合模式的实现代码，与安全式的组合模式的实现代码类似，只要对其做简单修改就可以了。
+<br/>
+```java
+package composite;
+import java.util.ArrayList;
+public class CompositePattern
+{
+    public static void main(String[] args)
+    {
+        Component c0=new Composite(); 
+        Component c1=new Composite(); 
+        Component leaf1=new Leaf("1"); 
+        Component leaf2=new Leaf("2"); 
+        Component leaf3=new Leaf("3");          
+        c0.add(leaf1); 
+        c0.add(c1);
+        c1.add(leaf2); 
+        c1.add(leaf3);          
+        c0.operation(); 
+    }
+}
+//抽象构件
+interface Component
+{
+    public void add(Component c);
+    public void remove(Component c);
+    public Component getChild(int i);
+    public void operation();
+}
+//树叶构件
+class Leaf implements Component
+{
+    private String name;
+    public Leaf(String name)
+    {
+        this.name=name;
+    }
+    public void add(Component c){ }           
+    public void remove(Component c){ }   
+    public Component getChild(int i)
+    {
+        return null;
+    }   
+    public void operation()
+    {
+        System.out.println("树叶"+name+"：被访问！"); 
+    }
+}
+//树枝构件
+class Composite implements Component
+{
+    private ArrayList<Component> children=new ArrayList<Component>();   
+    public void add(Component c)
+    {
+        children.add(c);
+    }   
+    public void remove(Component c)
+    {
+        children.remove(c);
+    }   
+    public Component getChild(int i)
+    {
+        return children.get(i);
+    }   
+    public void operation()
+    {
+        for(Object obj:children)
+        {
+            ((Component)obj).operation();
+        }
+    }    
+}
+```
+```info
+程序运行结果如下：
+树叶1：被访问！
+树叶2：被访问！
+树叶3：被访问！
+```
+
+### 组合模式的应用实例
+#### 【例1】用组合模式实现当用户在商店购物后，显示其所选商品信息，并计算所选商品总价的功能。
+说明：假如李先生到韶关“天街e角”生活用品店购物，用 1 个红色小袋子装了 2 包婺源特产（单价 7.9 元）、1 张婺源地图（单价 9.9 元）；用 1 个白色小袋子装了 2 包韶关香藉（单价 68 元）和 3 包韶关红茶（单价 180 元）；用 1 个中袋子装了前面的红色小袋子和 1 个景德镇瓷器（单价 380 元）；用 1 个大袋子装了前面的中袋子、白色小袋子和 1 双李宁牌运动鞋（单价 198 元）。
+<br/>
+最后“大袋子”中的内容有：{1 双李宁牌运动鞋（单价 198 元）、白色小袋子{2 包韶关香菇（单价 68 元）、3 包韶关红茶（单价 180 元）}、中袋子{1 个景德镇瓷器（单价 380 元）、红色小袋子{2 包婺源特产（单价 7.9 元）、1 张婺源地图（单价 9.9 元）}}}，现在要求编程显示李先生放在大袋子中的所有商品信息并计算要支付的总价。
+<br/>
+本实例可按安全组合模式设计，其结构图如图 4 所示。
+<br/>
+![](/images/design/49.gif)
+<br/>
+图4 韶关“天街e角”店购物的结构图
+<br/>
+```java
+package composite;
+import java.util.ArrayList;
+public class ShoppingTest
+{
+    public static void main(String[] args)
+    {
+        float s=0;
+        Bags BigBag,mediumBag,smallRedBag,smallWhiteBag;
+        Goods sp;
+        BigBag=new Bags("大袋子");
+        mediumBag=new Bags("中袋子");
+        smallRedBag=new Bags("红色小袋子");
+        smallWhiteBag=new Bags("白色小袋子");               
+        sp=new Goods("婺源特产",2,7.9f);
+        smallRedBag.add(sp);
+        sp=new Goods("婺源地图",1,9.9f);
+        smallRedBag.add(sp);       
+        sp=new Goods("韶关香菇",2,68);
+        smallWhiteBag.add(sp);
+        sp=new Goods("韶关红茶",3,180);
+        smallWhiteBag.add(sp);       
+        sp=new Goods("景德镇瓷器",1,380);
+        mediumBag.add(sp);
+        mediumBag.add(smallRedBag);       
+        sp=new Goods("李宁牌运动鞋",1,198);
+        BigBag.add(sp);
+        BigBag.add(smallWhiteBag);
+        BigBag.add(mediumBag);
+        System.out.println("您选购的商品有：");
+        BigBag.show();
+        s=BigBag.calculation();       
+        System.out.println("要支付的总价是："+s+"元");
+    }
+}
+//抽象构件：物品
+interface Articles
+{
+    public float calculation(); //计算
+    public void show();
+}
+//树叶构件：商品
+class Goods implements Articles
+{
+    private String name;     //名字
+    private int quantity;    //数量
+    private float unitPrice; //单价
+    public Goods(String name,int quantity,float unitPrice)
+    {
+        this.name=name;
+        this.quantity=quantity;
+        this.unitPrice=unitPrice;
+    }   
+    public float calculation()
+    {
+        return quantity*unitPrice; 
+    }
+    public void show()
+    {
+        System.out.println(name+"(数量："+quantity+"，单价："+unitPrice+"元)");
+    }
+}
+//树枝构件：袋子
+class Bags implements Articles
+{
+    private String name;     //名字   
+    private ArrayList<Articles> bags=new ArrayList<Articles>();   
+    public Bags(String name)
+    {
+        this.name=name;       
+    }
+    public void add(Articles c)
+    {
+        bags.add(c);
+    }   
+    public void remove(Articles c)
+    {
+        bags.remove(c);
+    }   
+    public Articles getChild(int i)
+    {
+        return bags.get(i);
+    }   
+    public float calculation()
+    {
+        float s=0;
+        for(Object obj:bags)
+        {
+            s+=((Articles)obj).calculation();
+        }
+        return s;
+    }
+    public void show()
+    {
+        for(Object obj:bags)
+        {
+            ((Articles)obj).show();
+        }
+    }
+}
+```
+```info
+程序运行结果如下：
+您选购的商品有：
+李宁牌运动鞋(数量：1，单价：198.0元)
+韶关香菇(数量：2，单价：68.0元)
+韶关红茶(数量：3，单价：180.0元)
+景德镇瓷器(数量：1，单价：380.0元)
+婺源特产(数量：2，单价：7.9元)
+婺源地图(数量：1，单价：9.9元)
+要支付的总价是：1279.7元
+```
+### 组合模式的应用场景
+前面分析了组合模式的结构与特点，下面分析它适用的以下应用场景。
+- 1.在需要表示一个对象整体与部分的层次结构的场合。
+- 2.要求对用户隐藏组合对象与单个对象的不同，用户可以用统一的接口使用组合结构中的所有对象的场合。
+### 组合模式的扩展
+如果对前面介绍的组合模式中的树叶节点和树枝节点进行抽象，也就是说树叶节点和树枝节点还有子节点，这时组合模式就扩展成复杂的组合模式了，如 Java AWT/Swing 中的简单组件 JTextComponent 有子类 JTextField、JTextArea，容器组件 Container 也有子类 Window、Panel。复杂的组合模式的结构图如图 5 所示。
+<br/>
+![](/images/design/50.gif)
+<br/>
+
+## 行为型模式概述（行为型模式的分类）
+行为型模式用于描述程序在运行时复杂的流程控制，即描述多个类或对象之间怎样相互协作共同完成单个对象都无法单独完成的任务，它涉及算法与对象间职责的分配。
+<br/>
+行为型模式分为类行为模式和对象行为模式，前者采用继承机制来在类间分派行为，后者采用组合或聚合在对象间分配行为。由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象行为模式比类行为模式具有更大的灵活性。
+- 1.模板方法（Template Method）模式：定义一个操作中的算法骨架，将算法的一些步骤延迟到子类中，使得子类在可以不改变该算法结构的情况下重定义该算法的某些特定步骤。
+- 2.策略（Strategy）模式：定义了一系列算法，并将每个算法封装起来，使它们可以相互替换，且算法的改变不会影响使用算法的客户。
+- 3.命令（Command）模式：将一个请求封装为一个对象，使发出请求的责任和执行请求的责任分割开。
+- 4.职责链（Chain of Responsibility）模式：把请求从链中的一个对象传到下一个对象，直到请求被响应为止。通过这种方式去除对象之间的耦合。
+- 5.状态（State）模式：允许一个对象在其内部状态发生改变时改变其行为能力。
+- 6.观察者（Observer）模式：多个对象间存在一对多关系，当一个对象发生改变时，把这种改变通知给其他多个对象，从而影响其他对象的行为。
+- 7.中介者（Mediator）模式：定义一个中介对象来简化原有对象之间的交互关系，降低系统中对象间的耦合度，使原有对象之间不必相互了解。
+- 8.迭代器（Iterator）模式：提供一种方法来顺序访问聚合对象中的一系列数据，而不暴露聚合对象的内部表示。
+- 9.访问者（Visitor）模式：在不改变集合元素的前提下，为一个集合中的每个元素提供多种访问方式，即每个元素有多个访问者对象访问。
+- 10.备忘录（Memento）模式：在不破坏封装性的前提下，获取并保存一个对象的内部状态，以便以后恢复它。
+- 11.解释器（Interpreter）模式：提供如何定义语言的文法，以及对语言句子的解释方法，即解释器。
+<br/>
+以上 11 种行为型模式，除了模板方法模式和解释器模式是类行为型模式，其他的全部属于对象行为型模式，下面我们将详细介绍它们的特点、结构与应用。
+
+## 13.模板方法模式（模板方法设计模式）详解
+在面向对象程序设计过程中，程序员常常会遇到这种情况：设计一个系统时知道了算法所需的关键步骤，而且确定了这些步骤的执行顺序，但某些步骤的具体实现还未知，或者说某些步骤的实现与具体的环境相关。
+<br/>
+例如，去银行办理业务一般要经过以下4个流程：取号、排队、办理具体业务、对银行工作人员进行评分等，其中取号、排队和对银行工作人员进行评分的业务对每个客户是一样的，可以在父类中实现，但是办理具体业务却因人而异，它可能是存款、取款或者转账等，可以延迟到子类中实现。
+<br/>
+这样的例子在生活中还有很多，例如，一个人每天会起床、吃饭、做事、睡觉等，其中“做事”的内容每天可能不同。我们把这些规定了流程或格式的实例定义成模板，允许使用者根据自己的需求去更新它，例如，简历模板、论文模板、Word 中模板文件等。
+<br/>
+### 模式的定义与特点
+模板方法（Template Method）模式的定义如下：定义一个操作中的算法骨架，而将算法的一些步骤延迟到子类中，使得子类可以不改变该算法结构的情况下重定义该算法的某些特定步骤。它是一种类行为型模式。
+<br/>
+该模式的主要优点如下。
+- 1.它封装了不变部分，扩展可变部分。它把认为是不变部分的算法封装到父类中实现，而把可变部分算法由子类继承实现，便于子类继续扩展。
+- 2.它在父类中提取了公共的部分代码，便于代码复用。
+- 3.部分方法是由子类实现的，因此子类可以通过扩展方式增加相应的功能，符合开闭原则。
+<br/>
+该模式的主要缺点如下。
+- 1.对每个不同的实现都需要定义一个子类，这会导致类的个数增加，系统更加庞大，设计也更加抽象。
+- 2.父类中的抽象方法由子类实现，子类执行的结果会影响父类的结果，这导致一种反向的控制结构，它提高了代码阅读的难度。
+### 模式的结构与实现
+模板方法模式需要注意抽象类与具体子类之间的协作。它用到了虚函数的多态性技术以及“不用调用我，让我来调用你”的反向控制技术。现在来介绍它们的基本结构。
+#### 1. 模式的结构
+模板方法模式包含以下主要角色。
+<br/>
+(1) 抽象类（Abstract Class）：负责给出一个算法的轮廓和骨架。它由一个模板方法和若干个基本方法构成。这些方法的定义如下。
+<br/>
+① 模板方法：定义了算法的骨架，按某种顺序调用其包含的基本方法。
+② 基本方法：是整个算法中的一个步骤，包含以下几种类型。
+- 抽象方法：在抽象类中申明，由具体子类实现。
+- 具体方法：在抽象类中已经实现，在具体子类中可以继承或重写它。
+- 钩子方法：在抽象类中已经实现，包括用于判断的逻辑方法和需要子类重写的空方法两种。
+<br/>
+(2) 具体子类（Concrete Class）：实现抽象类中所定义的抽象方法和钩子方法，它们是一个顶级逻辑的一个组成步骤。
+<br/>
+模板方法模式的结构图如图 1 所示。<br/>
+![](/images/design/51.gif)
+<br/>
+图1 模板方法模式的结构图
+<br/>
+```java
+package templateMethod;
+public class TemplateMethodPattern
+{
+    public static void main(String[] args)
+    {
+        AbstractClass tm=new ConcreteClass();
+        tm.TemplateMethod();
+    }
+}
+//抽象类
+abstract class AbstractClass
+{
+    public void TemplateMethod() //模板方法
+    {
+        SpecificMethod();
+        abstractMethod1();          
+         abstractMethod2();
+    }  
+    public void SpecificMethod() //具体方法
+    {
+        System.out.println("抽象类中的具体方法被调用...");
+    }   
+    public abstract void abstractMethod1(); //抽象方法1
+    public abstract void abstractMethod2(); //抽象方法2
+}
+//具体子类
+class ConcreteClass extends AbstractClass
+{
+    public void abstractMethod1()
+    {
+        System.out.println("抽象方法1的实现被调用...");
+    }   
+    public void abstractMethod2()
+    {
+        System.out.println("抽象方法2的实现被调用...");
+    }
+}
+```
+```info
+程序的运行结果如下：
+抽象类中的具体方法被调用...
+抽象方法1的实现被调用...
+抽象方法2的实现被调用...
+```
+### 模式的应用实例
+#### 【例1】用模板方法模式实现出国留学手续设计程序。
+分析：出国留学手续一般经过以下流程：索取学校资料，提出入学申请，办理因私出国护照、出境卡和公证，申请签证，体检、订机票、准备行装，抵达目标学校等，其中有些业务对各个学校是一样的，但有些业务因学校不同而不同，所以比较适合用模板方法模式来实现。
+<br/>
+在本实例中，我们先定义一个出国留学的抽象类 StudyAbroad，里面包含了一个模板方法 TemplateMethod()，该方法中包含了办理出国留学手续流程中的各个基本方法，其中有些方法的处理由于各国都一样，所以在抽象类中就可以实现，但有些方法的处理各国是不同的，必须在其具体子类（如美国留学类 StudyInAmerica）中实现。如果再增加一个国家，只要增加一个子类就可以了，图 2 所示是其结构图
+<br/>
+![](/images/design/52.gif)
+<br/>
+图2 出国留学手续设计程序的结构图
+<br/>
+```java
+package templateMethod;
+public class StudyAbroadProcess
+{
+    public static void main(String[] args)
+    {
+        StudyAbroad tm=new StudyInAmerica();
+        tm.TemplateMethod();
+    }
+}
+//抽象类: 出国留学
+abstract class StudyAbroad
+{
+    public void TemplateMethod() //模板方法
+    {
+        LookingForSchool(); //索取学校资料
+        ApplyForEnrol();    //入学申请      
+        ApplyForPassport(); //办理因私出国护照、出境卡和公证
+        ApplyForVisa();     //申请签证
+        ReadyGoAbroad();    //体检、订机票、准备行装
+        Arriving();         //抵达
+    }              
+    public void ApplyForPassport()
+    {
+        System.out.println("三.办理因私出国护照、出境卡和公证：");
+        System.out.println("  1）持录取通知书、本人户口簿或身份证向户口所在地公安机关申请办理因私出国护照和出境卡。");
+        System.out.println("  2）办理出生公证书，学历、学位和成绩公证，经历证书，亲属关系公证，经济担保公证。");
+    }
+    public void ApplyForVisa()
+    {
+        System.out.println("四.申请签证：");
+        System.out.println("  1）准备申请国外境签证所需的各种资料，包括个人学历、成绩单、工作经历的证明；个人及家庭收入、资金和财产证明；家庭成员的关系证明等；");
+        System.out.println("  2）向拟留学国家驻华使(领)馆申请入境签证。申请时需按要求填写有关表格，递交必需的证明材料，缴纳签证。有的国家(比如美国、英国、加拿大等)在申请签证时会要求申请人前往使(领)馆进行面试。");
+    }
+    public void ReadyGoAbroad()
+    {
+        System.out.println("五.体检、订机票、准备行装：");
+        System.out.println("  1）进行身体检查、免疫检查和接种传染病疫苗；");
+        System.out.println("  2）确定机票时间、航班和转机地点。");
+    }
+    public abstract void LookingForSchool();//索取学校资料
+    public abstract void ApplyForEnrol();   //入学申请
+    public abstract void Arriving();        //抵达
+}
+//具体子类: 美国留学
+class StudyInAmerica extends StudyAbroad
+{
+    @Override
+    public void LookingForSchool()
+    {
+        System.out.println("一.索取学校以下资料：");
+        System.out.println("  1）对留学意向国家的政治、经济、文化背景和教育体制、学术水平进行较为全面的了解；");
+        System.out.println("  2）全面了解和掌握国外学校的情况，包括历史、学费、学制、专业、师资配备、教学设施、学术地位、学生人数等；");
+        System.out.println("  3）了解该学校的住宿、交通、医疗保险情况如何；");
+        System.out.println("  4）该学校在中国是否有授权代理招生的留学中介公司？");
+        System.out.println("  5）掌握留学签证情况；");
+        System.out.println("  6）该国政府是否允许留学生合法打工？");
+        System.out.println("  8）毕业之后可否移民？");
+        System.out.println("  9）文凭是否受到我国认可？");
+    }
+    @Override
+    public void ApplyForEnrol()
+    {
+        System.out.println("二.入学申请：");
+        System.out.println("  1）填写报名表；");
+        System.out.println("  2）将报名表、个人学历证明、最近的学习成绩单、推荐信、个人简历、托福或雅思语言考试成绩单等资料寄往所申请的学校；");
+        System.out.println("  3）为了给签证办理留有充裕的时间，建议越早申请越好，一般提前1年就比较从容。");       
+    }
+    @Override
+    public void Arriving()
+    {
+        System.out.println("六.抵达目标学校：");
+        System.out.println("  1）安排住宿；");
+        System.out.println("  2）了解校园及周边环境。");
+    }
+}
+```
+### 模式的应用场景
+模板方法模式通常适用于以下场景。
+- 1.算法的整体步骤很固定，但其中个别部分易变时，这时候可以使用模板方法模式，将容易变的部分抽象出来，供子类实现。
+- 2.当多个子类存在公共的行为时，可以将其提取出来并集中到一个公共父类中以避免代码重复。首先，要识别现有代码中的不同之处，并且将不同之处分离为新的操作。最后，用一个调用这些新的操作的模板方法来替换这些不同的代码。
+- 3.当需要控制子类的扩展时，模板方法只在特定点调用钩子操作，这样就只允许在这些点进行扩展。
+### 模式的扩展
+在模板方法模式中，基本方法包含：抽象方法、具体方法和钩子方法，正确使用“钩子方法”可以使得子类控制父类的行为。如下面例子中，可以通过在具体子类中重写钩子方法 HookMethod1() 和 HookMethod2() 来改变抽象父类中的运行结果，其结构图如图 3 所示。
+<br/>
+![](/images/design/53.gif)
+<br/>
+图3 含钩子方法的模板方法模式的结构图
+```java
+package templateMethod;
+public class HookTemplateMethod
+{
+    public static void main(String[] args)
+    {
+        HookAbstractClass tm=new HookConcreteClass();
+        tm.TemplateMethod();
+    }
+}
+//含钩子方法的抽象类
+abstract class HookAbstractClass
+{
+    public void TemplateMethod() //模板方法
+    {
+        abstractMethod1();
+        HookMethod1();
+        if(HookMethod2())
+        {
+            SpecificMethod();   
+        }
+         abstractMethod2();
+    }  
+    public void SpecificMethod() //具体方法
+    {
+        System.out.println("抽象类中的具体方法被调用...");
+    }
+    public void HookMethod1(){}  //钩子方法1
+    public boolean HookMethod2() //钩子方法2
+    {
+        return true;
+    }
+    public abstract void abstractMethod1(); //抽象方法1
+    public abstract void abstractMethod2(); //抽象方法2
+}
+//含钩子方法的具体子类
+class HookConcreteClass extends HookAbstractClass
+{
+    public void abstractMethod1()
+    {
+        System.out.println("抽象方法1的实现被调用...");
+    }   
+    public void abstractMethod2()
+    {
+        System.out.println("抽象方法2的实现被调用...");
+    }   
+    public void HookMethod1()
+    {
+        System.out.println("钩子方法1被重写...");
+    }
+    public boolean HookMethod2()
+    {
+        return false;
+    }
+}
+```
+如果钩子方法 HookMethod1() 和钩子方法 HookMethod2() 的代码改变，则程序的运行结果也会改变。
+
+## 14.策略模式（策略设计模式）详解
+在现实生活中常常遇到实现某种目标存在多种策略可供选择的情况，例如，出行旅游可以乘坐飞机、乘坐火车、骑自行车或自己开私家车等，超市促销可以釆用打折、送商品、送积分等方法。
+<br/>
+在软件开发中也常常遇到类似的情况，当实现某一个功能存在多种算法或者策略，我们可以根据环境或者条件的不同选择不同的算法或者策略来完成该功能，如数据排序策略有冒泡排序、选择排序、插入排序、二叉树排序等。
+<br/>
+如果使用多重条件转移语句实现（即硬编码），不但使条件语句变得很复杂，而且增加、删除或更换算法要修改原代码，不易维护，违背开闭原则。如果采用策略模式就能很好解决该问题。
+<br/>
+### 策略模式的定义与特点
+策略（Strategy）模式的定义：该模式定义了一系列算法，并将每个算法封装起来，使它们可以相互替换，且算法的变化不会影响使用算法的客户。策略模式属于对象行为模式，它通过对算法进行封装，把使用算法的责任和算法的实现分割开来，并委派给不同的对象对这些算法进行管理。
+<br/>
+策略模式的主要优点如下。
+- 1.多重条件语句不易维护，而使用策略模式可以避免使用多重条件语句。
+- 2.策略模式提供了一系列的可供重用的算法族，恰当使用继承可以把算法族的公共代码转移到父类里面，从而避免重复的代码。
+- 3.策略模式可以提供相同行为的不同实现，客户可以根据不同时间或空间要求选择不同的。
+- 4.策略模式提供了对开闭原则的完美支持，可以在不修改原代码的情况下，灵活增加新算法。
+- 5.策略模式把算法的使用放到环境类中，而算法的实现移到具体策略类中，实现了二者的分离。
+<br/>
+其主要缺点如下。
+- 1.客户端必须理解所有策略算法的区别，以便适时选择恰当的算法类。
+- 2.策略模式造成很多的策略类。
+
+### 策略模式的结构与实现
+策略模式是准备一组算法，并将这组算法封装到一系列的策略类里面，作为一个抽象策略类的子类。策略模式的重心不是如何实现算法，而是如何组织这些算法，从而让程序结构更加灵活，具有更好的维护性和扩展性，现在我们来分析其基本结构和实现方法。
+<br/>
+#### 1. 模式的结构
+策略模式的主要角色如下。
+- 1.抽象策略（Strategy）类：定义了一个公共接口，各种不同的算法以不同的方式实现这个接口，环境角色使用这个接口调用不同的算法，一般使用接口或抽象类实现。
+- 2.具体策略（Concrete Strategy）类：实现了抽象策略定义的接口，提供具体的算法实现。
+- 3.环境（Context）类：持有一个策略类的引用，最终给客户端调用。
+<br/>
+其结构图如图 1 所示。
+<br/>
+![](/images/design/54.gif)
+<br/>
+#### 2. 模式的实现
+策略模式的实现代码如下：
+```java
+package strategy;
+public class StrategyPattern
+{
+    public static void main(String[] args)
+    {
+        Context c=new Context();
+        Strategy s=new ConcreteStrategyA();
+        c.setStrategy(s);
+        c.strategyMethod();
+        System.out.println("-----------------");
+        s=new ConcreteStrategyB();
+        c.setStrategy(s);
+        c.strategyMethod();
+    }
+}
+//抽象策略类
+interface Strategy
+{   
+    public void strategyMethod();    //策略方法
+}
+//具体策略类A
+class ConcreteStrategyA implements Strategy
+{
+    public void strategyMethod()
+    {
+        System.out.println("具体策略A的策略方法被访问！");
+    }
+}
+//具体策略类B
+class ConcreteStrategyB implements Strategy
+{
+  public void strategyMethod()
+  {
+      System.out.println("具体策略B的策略方法被访问！");
+  }
+}
+//环境类
+class Context
+{
+    private Strategy strategy;
+    public Strategy getStrategy()
+    {
+        return strategy;
+    }
+    public void setStrategy(Strategy strategy)
+    {
+        this.strategy=strategy;
+    }
+    public void strategyMethod()
+    {
+        strategy.strategyMethod();
+    }
+}
+```
+
+### 策略模式的应用实例
+#### 【例1】策略模式在“大闸蟹”做菜中的应用。
+分析：关于大闸蟹的做法有很多种，我们以清蒸大闸蟹和红烧大闸蟹两种方法为例，介绍策略模式的应用。
+<br/>
+首先，定义一个大闸蟹加工的抽象策略类（CrabCooking），里面包含了一个做菜的抽象方法 CookingMethod()；然后，定义清蒸大闸蟹（SteamedCrabs）和红烧大闸蟹（BraisedCrabs）的具体策略类，它们实现了抽象策略类中的抽象方法；由于本程序要显示做好的结果图（[点此下载要显示的结果图](http://c.biancheng.net/uploads/soft/181113/3-1Q116104147.zip)），所以将具体策略类定义成 JLabel 的子类；最后，定义一个厨房（Kitchen）环境类，它具有设置和选择做菜策略的方法；客户类通过厨房类获取做菜策略，并把做菜结果图在窗体中显示出来，图 2 所示是其结构图。
+<br/>
+![](/images/design/55.gif)
+<br/>
+图2 大闸蟹做菜策略的结构图
+<br/>
+```java
+package strategy;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+public class CrabCookingStrategy implements ItemListener
+{
+    private JFrame f;
+    private JRadioButton qz,hs;
+    private JPanel CenterJP,SouthJP;
+    private Kitchen cf;    //厨房
+    private CrabCooking qzx,hsx;    //大闸蟹加工者   
+    CrabCookingStrategy()
+    {
+        f=new JFrame("策略模式在大闸蟹做菜中的应用");
+        f.setBounds(100,100,500,400);
+        f.setVisible(true);       
+        f.setResizable(false);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        SouthJP=new JPanel();
+        CenterJP=new JPanel();
+        f.add("South",SouthJP);
+        f.add("Center",CenterJP);
+        qz=new JRadioButton("清蒸大闸蟹");
+        hs=new JRadioButton("红烧大闸蟹");
+        qz.addItemListener(this);
+        hs.addItemListener(this);
+        ButtonGroup group=new ButtonGroup();
+        group.add(qz);
+        group.add(hs);
+        SouthJP.add(qz);
+        SouthJP.add(hs);
+        //---------------------------------
+        cf=new Kitchen();    //厨房
+        qzx=new SteamedCrabs();    //清蒸大闸蟹类
+        hsx=new BraisedCrabs();    //红烧大闸蟹类
+    }
+    public void itemStateChanged(ItemEvent e)
+    {
+        JRadioButton jc=(JRadioButton) e.getSource();
+        if(jc==qz)
+        {
+            cf.setStrategy(qzx);
+            cf.CookingMethod(); //清蒸
+        }
+        else if(jc==hs)
+        {
+            cf.setStrategy(hsx);
+            cf.CookingMethod(); //红烧
+        }
+        CenterJP.removeAll();
+        CenterJP.repaint();
+        CenterJP.add((Component)cf.getStrategy());       
+        f.setVisible(true);
+    }
+    public static void main(String[] args)
+    {       
+        new CrabCookingStrategy();
+    }
+}
+//抽象策略类：大闸蟹加工类
+interface CrabCooking
+{
+    public void CookingMethod();    //做菜方法
+}
+//具体策略类：清蒸大闸蟹
+class SteamedCrabs extends JLabel implements CrabCooking
+{
+    private static final long serialVersionUID=1L;
+    public void CookingMethod()
+    {
+          this.setIcon(new ImageIcon("src/strategy/SteamedCrabs.jpg"));
+          this.setHorizontalAlignment(CENTER);
+    }
+}
+//具体策略类：红烧大闸蟹
+class BraisedCrabs extends JLabel implements CrabCooking
+{
+    private static final long serialVersionUID=1L;
+    public void CookingMethod()
+    {
+        this.setIcon(new ImageIcon("src/strategy/BraisedCrabs.jpg"));
+        this.setHorizontalAlignment(CENTER);
+    }
+}
+//环境类：厨房
+class Kitchen
+{
+    private CrabCooking strategy;    //抽象策略
+    public void setStrategy(CrabCooking strategy)
+    {
+        this.strategy=strategy;
+    }
+    public CrabCooking getStrategy()
+    {
+        return strategy;
+    }
+    public void CookingMethod()
+    {
+        strategy.CookingMethod();    //做菜   
+    }
+}
+```
+
+#### 【例2】用策略模式实现从韶关去婺源旅游的出行方式
+分析：从韶关去婺源旅游有以下几种出行方式：坐火车、坐汽车和自驾车，所以该实例用策略模式比较适合，图 4 所示是其结构图。
+<br/>
+![](/images/design/56.gif)
+<br/>
+图4 婺源旅游结构图
+### 策略模式的应用场景
+策略模式在很多地方用到，如 Java SE 中的容器布局管理就是一个典型的实例，Java SE 中的每个容器都存在多种布局供用户选择。在程序设计中，通常在以下几种情况中使用策略模式较多。
+- 1.一个系统需要动态地在几种算法中选择一种时，可将每个算法封装到策略类中。
+- 2.一个类定义了多种行为，并且这些行为在这个类的操作中以多个条件语句的形式出现，可将每个条件分支移入它们各自的策略类中以代替这些条件语句。
+- 3.系统中各算法彼此完全独立，且要求对客户隐藏具体算法的实现细节时。
+- 4.系统要求使用算法的客户不应该知道其操作的数据时，可使用策略模式来隐藏与算法相关的[数据结构](http://c.biancheng.net/data_structure/)。
+- 5.多个类只区别在表现行为不同，可以使用策略模式，在运行时动态选择具体要执行的行为。
+
+### 策略模式的扩展
+在一个使用策略模式的系统中，当存在的策略很多时，客户端管理所有策略算法将变得很复杂，如果在环境类中使用策略工厂模式来管理这些策略类将大大减少客户端的工作复杂度，其结构图如图 5 所示。
+<br/>
+![](/images/design/57.gif)
+<br/>
+图5 策略工厂模式的结构图
+
+## 15.命令模式（详解版）
+在软件开发系统中，常常出现“方法的请求者”与“方法的实现者”之间存在紧密的耦合关系。这不利于软件功能的扩展与维护。例如，想对行为进行“撤销、重做、记录”等处理都很不方便，因此“如何将方法的请求者与方法的实现者解耦？”变得很重要，命令模式能很好地解决这个问题。
+<br/>
+在现实生活中，这样的例子也很多，例如，电视机遥控器（命令发送者）通过按钮（具体命令）来遥控电视机（命令接收者），还有计算机键盘上的“功能键”等。
+<br/>
+### 命令模式的定义与特点
+命令（Command）模式的定义如下：将一个请求封装为一个对象，使发出请求的责任和执行请求的责任分割开。这样两者之间通过命令对象进行沟通，这样方便将命令对象进行储存、传递、调用、增加与管理。
+命令模式的主要优点如下。
+- 1.降低系统的耦合度。命令模式能将调用操作的对象与实现该操作的对象解耦。
+- 2.增加或删除命令非常方便。采用命令模式增加与删除命令不会影响其他类，它满足“开闭原则”，对扩展比较灵活。
+- 3.可以实现宏命令。命令模式可以与组合模式结合，将多个命令装配成一个组合命令，即宏命令。
+- 4.方便实现 Undo 和 Redo 操作。命令模式可以与后面介绍的备忘录模式结合，实现命令的撤销与恢复。
+<br/>
+其缺点是：可能产生大量具体命令类。因为计对每一个具体操作都需要设计一个具体命令类，这将增加系统的复杂性。
+### 命令模式的结构与实现
+可以将系统中的相关操作抽象成命令，使调用者与实现者相关分离，其结构如下。
+#### 1. 模式的结构
+命令模式包含以下主要角色。
+- 1.抽象命令类（Command）角色：声明执行命令的接口，拥有执行命令的抽象方法 execute()。
+- 2.具体命令角色（Concrete    Command）角色：是抽象命令类的具体实现类，它拥有接收者对象，并通过调用接收者的功能来完成命令要执行的操作。
+- 3.实现者/接收者（Receiver）角色：执行命令功能的相关操作，是具体命令对象业务的真正实现者。
+- 4.调用者/请求者（Invoker）角色：是请求的发送者，它通常拥有很多的命令对象，并通过访问命令对象来执行相关请求，它不直接访问接收者。
+<br/>
+![](/images/design/58.gif)
+<br/>
+图1 命令模式的结构图
+#### 2. 模式的实现
+```java
+package command;
+public class CommandPattern
+{
+    public static void main(String[] args)
+    {
+        Command cmd=new ConcreteCommand();
+        Invoker ir=new Invoker(cmd);
+        System.out.println("客户访问调用者的call()方法...");
+        ir.call();
+    }
+}
+//调用者
+class Invoker
+{
+    private Command command;
+    public Invoker(Command command)
+    {
+        this.command=command;
+    }
+    public void setCommand(Command command)
+    {
+        this.command=command;
+    }
+    public void call()
+    {
+        System.out.println("调用者执行命令command...");
+        command.execute();
+    }
+}
+//抽象命令
+interface Command
+{
+    public abstract void execute();
+}
+//具体命令
+class ConcreteCommand implements Command
+{
+    private Receiver receiver;
+    ConcreteCommand()
+    {
+        receiver=new Receiver();
+    }
+    public void execute()
+    {
+        receiver.action();
+    }
+}
+//接收者
+class Receiver
+{
+    public void action()
+    {
+        System.out.println("接收者的action()方法被调用...");
+    }
+}
+```
+### 命令模式的应用实例
+#### 【例1】用命令模式实现客户去餐馆吃早餐的实例。
+分析：客户去餐馆可选择的早餐有肠粉、河粉和馄饨等，客户可向服务员选择以上早餐中的若干种，服务员将客户的请求交给相关的厨师去做。这里的点早餐相当于“命令”，服务员相当于“调用者”，厨师相当于“接收者”，所以用命令模式实现比较合适。
+<br/>
+首先，定义一个早餐类（Breakfast），它是抽象命令类，有抽象方法 cooking()，说明要做什么；再定义其子类肠粉类（ChangFen）、馄饨类（HunTun）和河粉类（HeFen），它们是具体命令类，实现早餐类的 cooking() 方法，但它们不会具体做，而是交给具体的厨师去做；具体厨师类有肠粉厨师（ChangFenChef）、馄蚀厨师（HunTunChef）和河粉厨师（HeFenChef），他们是命令的接收者，由于本实例要显示厨师做菜的效果图（[点此下载要显示的效果图](http://c.biancheng.net/uploads/soft/181113/3-1Q116125200.zip)），所以把每个厨师类定义为 JFrame 的子类；最后，定义服务员类（Waiter），它接收客户的做菜请求，并发出做菜的命令。客户类是通过服务员类来点菜的，图 2 所示是其结构图。
+<br/>
+![](/images/design/59.gif)
+<br/>
+```java
+package command;
+import javax.swing.*;
+public class CookingCommand
+{
+    public static void main(String[] args)
+    {
+        Breakfast food1=new ChangFen();
+        Breakfast food2=new HunTun();
+        Breakfast food3=new HeFen();
+        Waiter fwy=new Waiter();
+        fwy.setChangFen(food1);//设置肠粉菜单
+        fwy.setHunTun(food2);  //设置河粉菜单
+        fwy.setHeFen(food3);   //设置馄饨菜单
+        fwy.chooseChangFen();  //选择肠粉
+        fwy.chooseHeFen();     //选择河粉
+        fwy.chooseHunTun();    //选择馄饨
+    }
+}
+//调用者：服务员
+class Waiter
+{
+    private Breakfast changFen,hunTun,heFen;
+    public void setChangFen(Breakfast f)
+    {
+        changFen=f;
+    }
+    public void setHunTun(Breakfast f)
+    {
+        hunTun=f;
+    }
+    public void setHeFen(Breakfast f)
+    {
+        heFen=f;
+    }
+    public void chooseChangFen()
+    {
+        changFen.cooking();
+    }
+    public void chooseHunTun()
+    {
+        hunTun.cooking();
+    }
+    public void chooseHeFen()
+    {
+        heFen.cooking();
+    }
+}
+//抽象命令：早餐
+interface Breakfast
+{
+    public abstract void cooking();
+}
+//具体命令：肠粉
+class ChangFen implements Breakfast
+{
+    private ChangFenChef receiver;
+    ChangFen()
+    {
+        receiver=new ChangFenChef();
+    }
+    public void cooking()
+    {       
+        receiver.cooking();
+    }
+}
+//具体命令：馄饨
+class HunTun implements Breakfast
+{
+    private HunTunChef receiver;
+    HunTun()
+    {
+        receiver=new HunTunChef();
+    }
+    public void cooking()
+    {
+        receiver.cooking();
+    }
+}
+//具体命令：河粉
+class HeFen implements Breakfast
+{
+    private HeFenChef receiver;
+    HeFen()
+    {
+        receiver=new HeFenChef();
+    }
+    public void cooking()
+    {
+        receiver.cooking();
+    }
+}
+//接收者：肠粉厨师
+class ChangFenChef extends JFrame
+{   
+    private static final long serialVersionUID = 1L;
+    JLabel l=new JLabel();
+    ChangFenChef()
+    {
+        super("煮肠粉");
+        l.setIcon(new ImageIcon("src/command/ChangFen.jpg"));
+        this.add(l);
+        this.setLocation(30, 30);
+        this.pack();
+        this.setResizable(false);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   
+    }
+    public void cooking()
+    {
+        this.setVisible(true);
+    }
+}
+//接收者：馄饨厨师
+class HunTunChef extends JFrame
+{
+    private static final long serialVersionUID=1L;
+    JLabel l=new JLabel();
+    HunTunChef()
+    {
+        super("煮馄饨");
+        l.setIcon(new ImageIcon("src/command/HunTun.jpg"));
+        this.add(l);
+        this.setLocation(350, 50);
+        this.pack();
+        this.setResizable(false);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);    
+    }
+    public void cooking()
+    {
+        this.setVisible(true);
+    }
+}
+//接收者：河粉厨师
+class HeFenChef extends JFrame
+{
+    private static final long serialVersionUID=1L;
+    JLabel l=new JLabel();
+    HeFenChef()
+    {
+        super("煮河粉");
+        l.setIcon(new ImageIcon("src/command/HeFen.jpg"));
+        this.add(l);
+        this.setLocation(200, 280);
+        this.pack();
+        this.setResizable(false);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+    public void cooking()
+    {
+        this.setVisible(true);
+    }
+}
+```
+
+### 命令模式的应用场景
+命令模式通常适用于以下场景。
+- 1.当系统需要将请求调用者与请求接收者解耦时，命令模式使得调用者和接收者不直接交互。
+- 2.当系统需要随机请求命令或经常增加或删除命令时，命令模式比较方便实现这些功能。
+- 3.当系统需要执行一组操作时，命令模式可以定义宏命令来实现该功能。
+- 4.当系统需要支持命令的撤销（Undo）操作和恢复（Redo）操作时，可以将命令对象存储起来，采用备忘录模式来实现。
+### 命令模式的扩展
+在软件开发中，有时将命令模式与前面学的组合模式联合使用，这就构成了宏命令模式，也叫组合命令模式。宏命令包含了一组命令，它充当了具体命令与调用者的双重角色，执行它时将递归调用它所包含的所有命令，其具体结构图如图 3 所示。
+<br/>
+![](/images/design/60.gif)
+<br/>
+图3 组合命令模式的结构图
+<br/>
+程序代码如下：
+```java
+package command;
+import java.util.ArrayList;
+public class CompositeCommandPattern
+{
+    public static void main(String[] args)
+    {
+        AbstractCommand cmd1=new ConcreteCommand1();
+        AbstractCommand cmd2=new ConcreteCommand2();
+        CompositeInvoker ir=new CompositeInvoker();
+        ir.add(cmd1);
+        ir.add(cmd2);
+        System.out.println("客户访问调用者的execute()方法...");
+        ir.execute();
+    }
+}
+//抽象命令
+interface AbstractCommand
+{
+    public abstract void execute();
+}
+//树叶构件: 具体命令1
+class ConcreteCommand1 implements AbstractCommand
+{
+    private CompositeReceiver receiver;
+    ConcreteCommand1()
+    {
+        receiver=new CompositeReceiver();
+    }
+    public void execute()
+    {       
+        receiver.action1();
+    }
+}
+//树叶构件: 具体命令2
+class ConcreteCommand2 implements AbstractCommand
+{
+    private CompositeReceiver receiver;
+    ConcreteCommand2()
+    {
+        receiver=new CompositeReceiver();
+    }
+    public void execute()
+    {       
+        receiver.action2();
+    }
+}
+//树枝构件: 调用者
+class CompositeInvoker implements AbstractCommand
+{
+    private ArrayList<AbstractCommand> children = new ArrayList<AbstractCommand>();   
+    public void add(AbstractCommand c)
+    {
+        children.add(c);
+    }   
+    public void remove(AbstractCommand c)
+    {
+        children.remove(c);
+    }   
+    public AbstractCommand getChild(int i)
+    {
+        return children.get(i);
+    }   
+    public void execute()
+    {
+        for(Object obj:children)
+        {
+            ((AbstractCommand)obj).execute();
+        }
+    }    
+}
+//接收者
+class CompositeReceiver
+{
+    public void action1()
+    {
+        System.out.println("接收者的action1()方法被调用...");
+    }
+    public void action2()
+    {
+        System.out.println("接收者的action2()方法被调用...");
+    }
+}
+```
+```info
+程序的运行结果如下：
+客户访问调用者的execute()方法...
+接收者的action1()方法被调用...
+接收者的action2()方法被调用...
+```
+当然，命令模式还可以同备忘录（Memento）模式组合使用，这样就变成了可撤销的命令模式，这将在后面介绍。
+
+## 16.责任链模式（职责链模式）详解
+在现实生活中，常常会出现这样的事例：一个请求有多个对象可以处理，但每个对象的处理条件或权限不同。例如，公司员工请假，可批假的领导有部门负责人、副总经理、总经理等，但每个领导能批准的天数不同，员工必须根据自己要请假的天数去找不同的领导签名，也就是说员工必须记住每个领导的姓名、电话和地址等信息，这增加了难度。这样的例子还有很多，如找领导出差报销、生活中的“击鼓传花”游戏等。
+<br/>
+在计算机软硬件中也有相关例子，如总线网中数据报传送，每台计算机根据目标地址是否同自己的地址相同来决定是否接收；还有异常处理中，处理程序根据异常的类型决定自己是否处理该异常；还有 Struts2 的拦截器、JSP 和 Servlet 的 Filter 等，所有这些，如果用责任链模式都能很好解决。
+<br/>
+### 模式的定义与特点
+责任链（Chain of Responsibility）模式的定义：为了避免请求发送者与多个请求处理者耦合在一起，将所有请求的处理者通过前一对象记住其下一个对象的引用而连成一条链；当有请求发生时，可将请求沿着这条链传递，直到有对象处理它为止。
+<br/>
+:::tip 注意
+注意：责任链模式也叫职责链模式。
+:::
+在责任链模式中，客户只需要将请求发送到责任链上即可，无须关心请求的处理细节和请求的传递过程，所以责任链将请求的发送者和请求的处理者解耦了。
+<br/>
+责任链模式是一种对象行为型模式，其主要优点如下。
+- 1.降低了对象之间的耦合度。该模式使得一个对象无须知道到底是哪一个对象处理其请求以及链的结构，发送者和接收者也无须拥有对方的明确信息。
+- 2.增强了系统的可扩展性。可以根据需要增加新的请求处理类，满足开闭原则。
+- 3.增强了给对象指派职责的灵活性。当工作流程发生变化，可以动态地改变链内的成员或者调动它们的次序，也可动态地新增或者删除责任。
+- 4.责任链简化了对象之间的连接。每个对象只需保持一个指向其后继者的引用，不需保持其他所有处理者的引用，这避免了使用众多的 if 或者 if···else 语句。
+- 5.责任分担。每个类只需要处理自己该处理的工作，不该处理的传递给下一个对象完成，明确各类的责任范围，符合类的单一职责原则。
+
+<br/>
+其主要缺点如下。
+- 1.不能保证每个请求一定被处理。由于一个请求没有明确的接收者，所以不能保证它一定会被处理，该请求可能一直传到链的末端都得不到处理。
+- 2.对比较长的职责链，请求的处理可能涉及多个处理对象，系统性能将受到一定影响。
+- 3.职责链建立的合理性要靠客户端来保证，增加了客户端的复杂性，可能会由于职责链的错误设置而导致系统出错，如可能会造成循环调用。
+<br/>
+
+### 模式的结构与实现
+通常情况下，可以通过数据链表来实现职责链模式的[数据结构](http://c.biancheng.net/data_structure/)。
+#### 1. 模式的结构
+职责链模式主要包含以下角色。
+- 1.抽象处理者（Handler）角色：定义一个处理请求的接口，包含抽象处理方法和一个后继连接。
+- 2.具体处理者（Concrete Handler）角色：实现抽象处理者的处理方法，判断能否处理本次请求，如果可以处理请求则处理，否则将该请求转给它的后继者。
+- 3.客户类（Client）角色：创建处理链，并向链头的具体处理者对象提交请求，它不关心处理细节和请求的传递过程。
+<br/>
+其结构图如图 1 所示。客户端可按图 2 所示设置责任链。
+<br/>
+![](/images/design/61.gif)
+<br/>
+图1 责任链模式的结构图
+<br/>
+![](/images/design/62.gif)
+<br/>
+图2 责任链
+<br/>
+#### 2. 模式的实现
+职责链模式的实现代码如下：
+```java
+package chainOfResponsibility;
+public class ChainOfResponsibilityPattern
+{
+    public static void main(String[] args)
+    {
+        //组装责任链 
+        Handler handler1=new ConcreteHandler1(); 
+        Handler handler2=new ConcreteHandler2(); 
+        handler1.setNext(handler2); 
+        //提交请求 
+        handler1.handleRequest("two");
+    }
+}
+//抽象处理者角色
+abstract class Handler
+{
+    private Handler next;
+    public void setNext(Handler next)
+    {
+        this.next=next; 
+    }
+    public Handler getNext()
+    { 
+        return next; 
+    }   
+    //处理请求的方法
+    public abstract void handleRequest(String request);       
+}
+//具体处理者角色1
+class ConcreteHandler1 extends Handler
+{
+    public void handleRequest(String request)
+    {
+        if(request.equals("one")) 
+        {
+            System.out.println("具体处理者1负责处理该请求！");       
+        }
+        else
+        {
+            if(getNext()!=null) 
+            {
+                getNext().handleRequest(request);             
+            }
+            else
+            {
+                System.out.println("没有人处理该请求！");
+            }
+        } 
+    } 
+}
+//具体处理者角色2
+class ConcreteHandler2 extends Handler
+{
+    public void handleRequest(String request)
+    {
+        if(request.equals("two")) 
+        {
+            System.out.println("具体处理者2负责处理该请求！");       
+        }
+        else
+        {
+            if(getNext()!=null) 
+            {
+                getNext().handleRequest(request);             
+            }
+            else
+            {
+                System.out.println("没有人处理该请求！");
+            }
+        } 
+    }
+}
+```
+### 模式的应用实例
+#### 【例1】用责任链模式设计一个请假条审批模块。
+分析：假如规定学生请假小于或等于 2 天，班主任可以批准；小于或等于 7 天，系主任可以批准；小于或等于 10 天，院长可以批准；其他情况不予批准；这个实例适合使用职责链模式实现。
+<br/>
+首先，定义一个领导类（Leader），它是抽象处理者，包含了一个指向下一位领导的指针 next 和一个处理假条的抽象处理方法 handleRequest(int LeaveDays)；然后，定义班主任类（ClassAdviser）、系主任类（DepartmentHead）和院长类（Dean），它们是抽象处理者的子类，是具体处理者，必须根据自己的权力去实现父类的 handleRequest(int LeaveDays) 方法，如果无权处理就将假条交给下一位具体处理者，直到最后；客户类负责创建处理链，并将假条交给链头的具体处理者（班主任）。图 3 所示是其结构图。
+<br/>
+![](/images/design/63.gif)
+<br/>
+图3 请假条审批模块的结构图
+<br/>
+```java
+package chainOfResponsibility;
+public class LeaveApprovalTest
+{
+    public static void main(String[] args)
+    {
+        //组装责任链 
+        Leader teacher1=new ClassAdviser();
+        Leader teacher2=new DepartmentHead();
+        Leader teacher3=new Dean();
+        //Leader teacher4=new DeanOfStudies();
+        teacher1.setNext(teacher2);
+        teacher2.setNext(teacher3);
+        //teacher3.setNext(teacher4);
+        //提交请求 
+        teacher1.handleRequest(8);
+    }
+}
+//抽象处理者：领导类
+abstract class Leader
+{
+    private Leader next;
+    public void setNext(Leader next)
+    {
+        this.next=next; 
+    }
+    public Leader getNext()
+    { 
+        return next; 
+    }   
+    //处理请求的方法
+    public abstract void handleRequest(int LeaveDays);       
+}
+//具体处理者1：班主任类
+class ClassAdviser extends Leader
+{
+    public void handleRequest(int LeaveDays)
+    {
+        if(LeaveDays<=2) 
+        {
+            System.out.println("班主任批准您请假" + LeaveDays + "天。");       
+        }
+        else
+        {
+            if(getNext() != null) 
+            {
+                getNext().handleRequest(LeaveDays);             
+            }
+            else
+            {
+                  System.out.println("请假天数太多，没有人批准该假条！");
+            }
+        } 
+    } 
+}
+//具体处理者2：系主任类
+class DepartmentHead extends Leader
+{
+    public void handleRequest(int LeaveDays)
+    {
+        if(LeaveDays<=7) 
+        {
+            System.out.println("系主任批准您请假" + LeaveDays + "天。");       
+        }
+        else
+        {
+            if(getNext() != null) 
+            {
+                  getNext().handleRequest(LeaveDays);             
+            }
+            else
+            {
+                System.out.println("请假天数太多，没有人批准该假条！");
+           }
+        } 
+    } 
+}
+//具体处理者3：院长类
+class Dean extends Leader
+{
+    public void handleRequest(int LeaveDays)
+    {
+        if(LeaveDays<=10) 
+        {
+            System.out.println("院长批准您请假" + LeaveDays + "天。");       
+        }
+        else
+        {
+              if(getNext() != null) 
+            {
+                getNext().handleRequest(LeaveDays);             
+            }
+            else
+            {
+                  System.out.println("请假天数太多，没有人批准该假条！");
+            }
+        } 
+    } 
+}
+//具体处理者4：教务处长类
+class DeanOfStudies extends Leader
+{
+    public void handleRequest(int LeaveDays)
+    {
+        if(LeaveDays<=20) 
+        {
+            System.out.println("教务处长批准您请假"+LeaveDays+"天。");       
+        }
+        else
+        {
+              if(getNext()!=null) 
+            {
+                getNext().handleRequest(LeaveDays);          
+            }
+            else
+            {
+                  System.out.println("请假天数太多，没有人批准该假条！");
+            }
+        } 
+    } 
+}
+```
 
 
 
