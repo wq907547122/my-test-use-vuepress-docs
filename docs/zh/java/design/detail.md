@@ -4524,11 +4524,1476 @@ class DeanOfStudies extends Leader
     } 
 }
 ```
+### 模式的应用场景
+前边已经讲述了关于责任链模式的结构与特点，下面介绍其应用场景，责任链模式通常在以下几种情况使用。
+- 1.有多个对象可以处理一个请求，哪个对象处理该请求由运行时刻自动确定。
+- 2.可动态指定一组对象处理请求，或添加新的处理者。
+- 3.在不明确指定请求处理者的情况下，向多个处理者中的一个提交请求。
+### 模式的扩展
+职责链模式存在以下两种情况。
+- 1.纯的职责链模式：一个请求必须被某一个处理者对象所接收，且一个具体处理者对某个请求的处理只能采用以下两种行为之一：自己处理（承担责任）；把责任推给下家处理。
+- 2.不纯的职责链模式：允许出现某一个具体处理者对象在承担了请求的一部分责任后又将剩余的责任传给下家的情况，且一个请求可以最终不被任何接收端对象所接收。
+
+## 17.状态模式（详解版）
+在软件开发过程中，应用程序中的有些对象可能会根据不同的情况做出不同的行为，我们把这种对象称为有状态的对象，而把影响对象行为的一个或多个动态变化的属性称为状态。当有状态的对象与外部事件产生互动时，其内部状态会发生改变，从而使得其行为也随之发生改变。如人的情绪有高兴的时候和伤心的时候，不同的情绪有不同的行为，当然外界也会影响其情绪变化。
+<br/>
+对这种有状态的对象编程，传统的解决方案是：将这些所有可能发生的情况全都考虑到，然后使用 if-else 语句来做状态判断，再进行不同情况的处理。但当对象的状态很多时，程序会变得很复杂。而且增加新的状态要添加新的 if-else 语句，这违背了“开闭原则”，不利于程序的扩展。
+<br/>
+以上问题如果采用“状态模式”就能很好地得到解决。状态模式的解决思想是：当控制一个对象状态转换的条件表达式过于复杂时，把相关“判断逻辑”提取出来，放到一系列的状态类当中，这样可以把原来复杂的逻辑判断简单化。
+<br/>
+### 状态模式的定义与特点
+状态（State）模式的定义：对有状态的对象，把复杂的“判断逻辑”提取到不同的状态对象中，允许状态对象在其内部状态发生改变时改变其行为。
+<br/>
+状态模式是一种对象行为型模式，其主要优点如下。
+- 1.状态模式将与特定状态相关的行为局部化到一个状态中，并且将不同状态的行为分割开来，满足“单一职责原则”。
+- 2.减少对象间的相互依赖。将不同的状态引入独立的对象中会使得状态转换变得更加明确，且减少对象间的相互依赖。
+- 3.有利于程序的扩展。通过定义新的子类很容易地增加新的状态和转换。
+<br/>
+状态模式的主要缺点如下。
+- 1.状态模式的使用必然会增加系统的类与对象的个数。
+- 2.状态模式的结构与实现都较为复杂，如果使用不当会导致程序结构和代码的混乱。
+### 状态模式的结构与实现
+状态模式把受环境改变的对象行为包装在不同的状态对象里，其意图是让一个对象在其内部状态改变的时候，其行为也随之改变。现在我们来分析其基本结构和实现方法。
+#### 1. 模式的结构
+状态模式包含以下主要角色。
+- 1.环境（Context）角色：也称为上下文，它定义了客户感兴趣的接口，维护一个当前状态，并将与状态相关的操作委托给当前状态对象来处理。
+- 2.抽象状态（State）角色：定义一个接口，用以封装环境对象中的特定状态所对应的行为。
+- 3.具体状态（Concrete    State）角色：实现抽象状态所对应的行为。
+<br/>
+其结构图如图 1 所示。
+<br/>
+![](/images/design/64.gif)
+<br/>
+图1 状态模式的结构图
+#### 2. 模式的实现
+状态模式的实现代码如下：
+```java
+package state;
+public class StatePatternClient
+{
+    public static void main(String[] args)
+    {       
+        Context context=new Context();    //创建环境       
+        context.Handle();    //处理请求
+        context.Handle();
+        context.Handle();
+        context.Handle();
+    }
+}
+//环境类
+class Context
+{
+    private State state;
+    //定义环境类的初始状态
+    public Context()
+    {
+        this.state=new ConcreteStateA();
+    }
+    //设置新状态
+    public void setState(State state)
+    {
+        this.state=state;
+    }
+    //读取状态
+    public State getState()
+    {
+        return(state);
+    }
+    //对请求做处理
+    public void Handle()
+    {
+        state.Handle(this);
+    }
+}
+//抽象状态类
+abstract class State
+{
+    public abstract void Handle(Context context);
+}
+//具体状态A类
+class ConcreteStateA extends State
+{
+    public void Handle(Context context)
+    {
+        System.out.println("当前状态是 A.");
+        context.setState(new ConcreteStateB());
+    }
+}
+//具体状态B类
+class ConcreteStateB extends State
+{
+    public void Handle(Context context)
+    {
+        System.out.println("当前状态是 B.");
+        context.setState(new ConcreteStateA());
+    }
+}
+```
+### 状态模式的应用实例
+#### 【例1】用“状态模式”设计一个学生成绩的状态转换程序。
+分析：本实例包含了“不及格”“中等”和“优秀” 3 种状态，当学生的分数小于 60 分时为“不及格”状态，当分数大于等于 60 分且小于 90 分时为“中等”状态，当分数大于等于 90 分时为“优秀”状态，我们用状态模式来实现这个程序。
+<br/>
+首先，定义一个抽象状态类（AbstractState），其中包含了环境属性、状态名属性和当前分数属性，以及加减分方法 addScore(intx) 和检查当前状态的抽象方法 checkState()；然后，定义“不及格”状态类 LowState、“中等”状态类 MiddleState 和“优秀”状态类 HighState，它们是具体状态类，实现 checkState() 方法，负责检査自己的状态，并根据情况转换；最后，定义环境类（ScoreContext），其中包含了当前状态对象和加减分的方法 add(int score)，客户类通过该方法来改变成绩状态。图 2 所示是其结构图。
+<br/>
+![](/images/design/65.gif)
+<br/>
+图2 学生成绩的状态转换程序的结构图
+<br/>
+程序代码如下：
+```java
+package state;
+public class ScoreStateTest
+{
+    public static void main(String[] args)
+    {
+        ScoreContext account=new ScoreContext();
+        System.out.println("学生成绩状态测试：");
+        account.add(30);
+        account.add(40);
+        account.add(25);
+        account.add(-15);
+        account.add(-25);
+    }
+}
+//环境类
+class ScoreContext
+{
+    private AbstractState state;
+    ScoreContext()
+    {
+        state=new LowState(this);
+    }
+    public void setState(AbstractState state)
+    {
+        this.state=state;
+    }
+    public AbstractState getState()
+    {
+        return state;
+    }   
+    public void add(int score)
+    {
+        state.addScore(score);
+    }
+}
+//抽象状态类
+abstract class AbstractState
+{
+    protected ScoreContext hj;  //环境
+    protected String stateName; //状态名
+    protected int score; //分数
+    public abstract void checkState(); //检查当前状态
+    public void addScore(int x)
+    {
+        score+=x;       
+        System.out.print("加上："+x+"分，\t当前分数："+score );
+        checkState();
+        System.out.println("分，\t当前状态："+hj.getState().stateName);
+    }   
+}
+//具体状态类：不及格
+class LowState extends AbstractState
+{
+    public LowState(ScoreContext h)
+    {
+        hj=h;
+        stateName="不及格";
+        score=0;
+    }
+    public LowState(AbstractState state)
+    {
+        hj=state.hj;
+        stateName="不及格";
+        score=state.score;
+    }
+    public void checkState()
+    {
+        if(score>=90)
+        {
+            hj.setState(new HighState(this));
+        }
+        else if(score>=60)
+        {
+            hj.setState(new MiddleState(this));
+        }
+    }   
+}
+//具体状态类：中等
+class MiddleState extends AbstractState
+{
+    public MiddleState(AbstractState state)
+    {
+        hj=state.hj;
+        stateName="中等";
+        score=state.score;
+    }
+    public void checkState()
+    {
+        if(score<60)
+        {
+            hj.setState(new LowState(this));
+        }
+        else if(score>=90)
+        {
+            hj.setState(new HighState(this));
+        }
+    }
+}
+//具体状态类：优秀
+class HighState extends AbstractState
+{
+    public HighState(AbstractState state)
+    {
+        hj=state.hj;
+        stateName="优秀";
+        score=state.score;
+    }           
+    public void checkState()
+    {
+        if(score<60)
+        {
+            hj.setState(new LowState(this));
+        }
+        else if(score<90)
+        {
+            hj.setState(new MiddleState(this));
+        }
+    }
+}
+```
+
+#### 【例2】用“状态模式”设计一个多线程的状态转换程序。
+分析：多线程存在 5 种状态，分别为新建状态、就绪状态、运行状态、阻塞状态和死亡状态，各个状态当遇到相关方法调用或事件触发时会转换到其他状态，其状态转换规律如图 3 所示。
+<br/>
+![](/images/design/66.gif)
+<br/>
+图3 线程状态转换图
+<br/>
+现在先定义一个抽象状态类（TheadState），然后为图 3 所示的每个状态设计一个具体状态类，它们是新建状态（New）、就绪状态（Runnable ）、运行状态（Running）、阻塞状态（Blocked）和死亡状态（Dead），每个状态中有触发它们转变状态的方法，环境类（ThreadContext）中先生成一个初始状态（New），并提供相关触发方法，图 4 所示是线程状态转换程序的结构图。
+<br/>
+![](/images/design/67.gif)
+<br/>
+图4 线程状态转换程序的结构图
+<br/>
+
+### 状态模式的应用场景
+通常在以下情况下可以考虑使用状态模式。
+- 1.当一个对象的行为取决于它的状态，并且它必须在运行时根据状态改变它的行为时，就可以考虑使用状态模式。
+- 2.一个操作中含有庞大的分支结构，并且这些分支决定于对象的状态时。
+### 状态模式的扩展
+在有些情况下，可能有多个环境对象需要共享一组状态，这时需要引入享元模式，将这些具体状态对象放在集合中供程序共享，其结构图如图 5 所示。
+<br/>
+![](/images/design/68.gif)
+<br/>
+图5 共享状态模式的结构图
+<br/>
+分析：共享状态模式的不同之处是在环境类中增加了一个 HashMap 来保存相关状态，当需要某种状态时可以从中获取，其程序代码如下：
+<br/>
+```java
+package state;
+import java.util.HashMap;
+public class FlyweightStatePattern
+{
+    public static void main(String[] args)
+    {
+        ShareContext context=new ShareContext(); //创建环境       
+        context.Handle(); //处理请求
+        context.Handle();
+        context.Handle();
+        context.Handle();
+    }
+}
+//环境类
+class ShareContext
+{
+    private ShareState state;
+    private HashMap<String, ShareState> stateSet=new HashMap<String, ShareState>();
+    public ShareContext()
+    {
+        state=new ConcreteState1();
+        stateSet.put("1", state);
+        state=new ConcreteState2();
+        stateSet.put("2", state);
+        state=getState("1");
+    }
+    //设置新状态
+    public void setState(ShareState state)
+    {
+        this.state=state;
+    }
+    //读取状态
+    public ShareState getState(String key)
+    {
+        ShareState s=(ShareState)stateSet.get(key);
+        return s;
+    }
+    //对请求做处理
+    public void Handle()
+    {
+        state.Handle(this);
+    }
+}
+//抽象状态类
+abstract class ShareState
+{
+    public abstract void Handle(ShareContext context);
+}
+//具体状态1类
+class ConcreteState1 extends ShareState
+{
+    public void Handle(ShareContext context)
+    {
+        System.out.println("当前状态是： 状态1");
+        context.setState(context.getState("2"));
+    }
+}
+//具体状态2类
+class ConcreteState2 extends ShareState
+{
+    public void Handle(ShareContext context)
+    {
+        System.out.println("当前状态是： 状态2");
+        context.setState(context.getState("1"));
+    }
+}
+```
+
+## 18.观察者模式（Observer模式）详解
+在现实世界中，许多对象并不是独立存在的，其中一个对象的行为发生改变可能会导致一个或者多个其他对象的行为也发生改变。例如，某种商品的物价上涨时会导致部分商家高兴，而消费者伤心；还有，当我们开车到交叉路口时，遇到红灯会停，遇到绿灯会行。这样的例子还有很多，例如，股票价格与股民、微信公众号与微信用户、气象局的天气预报与听众、小偷与警察等。
+<br/>
+在软件世界也是这样，例如，Excel 中的数据与折线图、饼状图、柱状图之间的关系；MVC 模式中的模型与视图的关系；事件模型中的事件源与事件处理者。所有这些，如果用观察者模式来实现就非常方便。
+<br/>
+### 模式的定义与特点
+观察者（Observer）模式的定义：指多个对象间存在一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。这种模式有时又称作发布-订阅模式、模型-视图模式，它是对象行为型模式。
+<br/>
+观察者模式是一种对象行为型模式，其主要优点如下。
+- 1.降低了目标与观察者之间的耦合关系，两者之间是抽象耦合关系。
+- 2.目标与观察者之间建立了一套触发机制。
+<br/>
+它的主要缺点如下。
+- 1.目标与观察者之间的依赖关系并没有完全解除，而且有可能出现循环引用。
+- 2.当观察者对象很多时，通知的发布会花费很多时间，影响程序的效率。
+
+### 模式的结构与实现
+实现观察者模式时要注意具体目标对象和具体观察者对象之间不能直接调用，否则将使两者之间紧密耦合起来，这违反了面向对象的设计原则。
+<br/>
+#### 1. 模式的结构
+观察者模式的主要角色如下。
+- 1.抽象主题（Subject）角色：也叫抽象目标类，它提供了一个用于保存观察者对象的聚集类和增加、删除观察者对象的方法，以及通知所有观察者的抽象方法。
+- 2.具体主题（Concrete    Subject）角色：也叫具体目标类，它实现抽象目标中的通知方法，当具体主题的内部状态发生改变时，通知所有注册过的观察者对象。
+- 3.抽象观察者（Observer）角色：它是一个抽象类或接口，它包含了一个更新自己的抽象方法，当接到具体主题的更改通知时被调用。
+- 4.具体观察者（Concrete Observer）角色：实现抽象观察者中定义的抽象方法，以便在得到目标的更改通知时更新自身的状态。
+<br/>
+观察者模式的结构图如图 1 所示。
+![](/images/design/69.gif)
+<br/>
+图1 观察者模式的结构图
+<br/>
+#### 2. 模式的实现
+观察者模式的实现代码如下：
+```java
+package observer;
+import java.util.*;
+public class ObserverPattern
+{
+    public static void main(String[] args)
+    {
+        Subject subject=new ConcreteSubject();
+        Observer obs1=new ConcreteObserver1();
+        Observer obs2=new ConcreteObserver2();
+        subject.add(obs1);
+        subject.add(obs2);
+        subject.notifyObserver();
+    }
+}
+//抽象目标
+abstract class Subject
+{
+    protected List<Observer> observers=new ArrayList<Observer>();   
+    //增加观察者方法
+    public void add(Observer observer)
+    {
+        observers.add(observer);
+    }    
+    //删除观察者方法
+    public void remove(Observer observer)
+    {
+        observers.remove(observer);
+    }   
+    public abstract void notifyObserver(); //通知观察者方法
+}
+//具体目标
+class ConcreteSubject extends Subject
+{
+    public void notifyObserver()
+    {
+        System.out.println("具体目标发生改变...");
+        System.out.println("--------------");       
+       
+        for(Object obs:observers)
+        {
+            ((Observer)obs).response();
+        }
+       
+    }          
+}
+//抽象观察者
+interface Observer
+{
+    void response(); //反应
+}
+//具体观察者1
+class ConcreteObserver1 implements Observer
+{
+    public void response()
+    {
+        System.out.println("具体观察者1作出反应！");
+    }
+}
+//具体观察者1
+class ConcreteObserver2 implements Observer
+{
+    public void response()
+    {
+        System.out.println("具体观察者2作出反应！");
+    }
+}
+```
+
+### 模式的应用实例
+#### 【例1】利用观察者模式设计一个程序，分析“人民币汇率”的升值或贬值对进口公司的进口产品成本或出口公司的出口产品收入以及公司的利润率的影响。
+分析：当“人民币汇率”升值时，进口公司的进口产品成本降低且利润率提升，出口公司的出口产品收入降低且利润率降低；当“人民币汇率”贬值时，进口公司的进口产品成本提升且利润率降低，出口公司的出口产品收入提升且利润率提升。
+<br/>
+这里的汇率（Rate）类是抽象目标类，它包含了保存观察者（Company）的 List 和增加/删除观察者的方法，以及有关汇率改变的抽象方法 change(int number)；而人民币汇率（RMBrate）类是具体目标， 它实现了父类的 change(int number) 方法，即当人民币汇率发生改变时通过相关公司；公司（Company）类是抽象观察者，它定义了一个有关汇率反应的抽象方法 response(int number)；进口公司（ImportCompany）类和出口公司（ExportCompany）类是具体观察者类，它们实现了父类的 response(int number) 方法，即当它们接收到汇率发生改变的通知时作为相应的反应。图 2 所示是其结构图。
+<br/>
+![](/images/design/70.gif)
+<br/>
+图2 人民币汇率分析程序的结构图
+<br/>
+```java
+package observer;
+import java.util.*;
+public class RMBrateTest
+{
+    public static void main(String[] args)
+    {
+        Rate rate=new RMBrate();         
+        Company watcher1=new ImportCompany(); 
+        Company watcher2=new ExportCompany();           
+        rate.add(watcher1); 
+        rate.add(watcher2);           
+        rate.change(10);
+        rate.change(-9);
+    }
+}
+//抽象目标：汇率
+abstract class Rate
+{
+    protected List<Company> companys=new ArrayList<Company>();   
+    //增加观察者方法
+    public void add(Company company)
+    {
+        companys.add(company);
+    }    
+    //删除观察者方法
+    public void remove(Company company)
+    {
+        companys.remove(company);
+    }   
+    public abstract void change(int number);
+}
+//具体目标：人民币汇率
+class RMBrate extends Rate 
+{
+    public void change(int number)
+    {       
+        for(Company obs:companys)
+        {
+            ((Company)obs).response(number);
+        }       
+    }
+}
+//抽象观察者：公司
+interface Company
+{
+    void response(int number);
+}
+//具体观察者1：进口公司 
+class ImportCompany implements Company 
+{
+    public void response(int number) 
+    {
+        if(number>0)
+        {
+            System.out.println("人民币汇率升值"+number+"个基点，降低了进口产品成本，提升了进口公司利润率。"); 
+        }
+        else if(number<0)
+        {
+              System.out.println("人民币汇率贬值"+(-number)+"个基点，提升了进口产品成本，降低了进口公司利润率。"); 
+        }
+    } 
+} 
+//具体观察者2：出口公司
+class ExportCompany implements Company 
+{
+    public void response(int number) 
+    {
+        if(number>0)
+        {
+            System.out.println("人民币汇率升值"+number+"个基点，降低了出口产品收入，降低了出口公司的销售利润率。"); 
+        }
+        else if(number<0)
+        {
+              System.out.println("人民币汇率贬值"+(-number)+"个基点，提升了出口产品收入，提升了出口公司的销售利润率。"); 
+        }
+    } 
+}
+```
+
+#### 【例2】利用观察者模式设计一个学校铃声的事件处理程序。
+分析：在本实例中，学校的“铃”是事件源和目标，“老师”和“学生”是事件监听器和具体观察者，“铃声”是事件类。学生和老师来到学校的教学区，都会注意学校的铃，这叫事件绑定；当上课时间或下课时间到，会触发铃发声，这时会生成“铃声”事件；学生和老师听到铃声会开始上课或下课，这叫事件处理。这个实例非常适合用观察者模式实现，图 3 给出了学校铃声的事件模型。
+<br/>
+![](/images/design/71.gif)
+<br/>
+图3 学校铃声的事件模型图
+<br/>
+现在用“观察者模式”来实现该事件处理模型。首先，定义一个铃声事件（RingEvent）类，它记录了铃声的类型（上课铃声/下课铃声）；再定义一个学校的铃（BellEventSource）类，它是事件源，是观察者目标类，该类里面包含了监听器容器 listener，可以绑定监听者（学生或老师），并且有产生铃声事件和通知所有监听者的方法；然后，定义一声事件监听者（BellEventListener）类，它是抽象观察者，它包含了铃声事件处理方法 heardBell(RingEvent e)；最后，定义老师类（TeachEventListener）和学生类（StuEventListener），它们是事件监听器，是具体观察者，听到铃声会去上课或下课。图 4 给出了学校铃声事件处理程序的结构。
+<br/>
+![](/images/design/72.gif)
+<br/>
+图4 学校铃声事件处理程序的结构图
+<br/>
+程序代码如下：
+<br/>
+```java
+package observer;
+import java.util.*;
+public class BellEventTest
+{
+    public static void main(String[] args)
+    {
+        BellEventSource bell=new BellEventSource();    //铃（事件源）    
+        bell.addPersonListener(new TeachEventListener()); //注册监听器（老师）
+        bell.addPersonListener(new StuEventListener());    //注册监听器（学生）
+        bell.ring(true);   //打上课铃声
+        System.out.println("------------");   
+        bell.ring(false);  //打下课铃声
+    }
+}
+//铃声事件类：用于封装事件源及一些与事件相关的参数
+class RingEvent extends EventObject
+{   
+    private static final long serialVersionUID=1L;
+    private boolean sound;    //true表示上课铃声,false表示下课铃声
+    public RingEvent(Object source,boolean sound)
+    {
+        super(source);
+        this.sound=sound;
+    }   
+    public void setSound(boolean sound)
+    {
+        this.sound=sound;
+    }
+    public boolean getSound()
+    {
+        return this.sound;
+    }
+}
+//目标类：事件源，铃
+class BellEventSource
+{    
+    private List<BellEventListener> listener; //监听器容器
+    public BellEventSource()
+    { 
+        listener=new ArrayList<BellEventListener>();        
+    }
+    //给事件源绑定监听器 
+    public void addPersonListener(BellEventListener ren)
+    { 
+        listener.add(ren); 
+    }
+    //事件触发器：敲钟，当铃声sound的值发生变化时，触发事件。
+    public void ring(boolean sound)
+    {
+        String type=sound?"上课铃":"下课铃";
+        System.out.println(type+"响！");
+        RingEvent event=new RingEvent(this, sound);     
+        notifies(event);    //通知注册在该事件源上的所有监听器                
+    }   
+    //当事件发生时,通知绑定在该事件源上的所有监听器做出反应（调用事件处理方法）
+    protected void notifies(RingEvent e)
+    { 
+        BellEventListener ren=null; 
+        Iterator<BellEventListener> iterator=listener.iterator(); 
+        while(iterator.hasNext())
+        { 
+            ren=iterator.next(); 
+            ren.heardBell(e); 
+        } 
+    }
+}
+//抽象观察者类：铃声事件监听器
+interface  BellEventListener extends EventListener
+{
+    //事件处理方法，听到铃声
+    public void heardBell(RingEvent e);
+}
+//具体观察者类：老师事件监听器
+class TeachEventListener implements BellEventListener
+{
+    public void heardBell(RingEvent e)
+    {        
+        if(e.getSound())
+        {
+            System.out.println("老师上课了...");           
+        }
+        else
+        {
+            System.out.println("老师下课了...");   
+        }          
+    }
+}
+//具体观察者类：学生事件监听器
+class StuEventListener implements BellEventListener
+{
+    public void heardBell(RingEvent e)
+    {        
+        if(e.getSound())
+        {
+            System.out.println("同学们，上课了...");           
+        }
+        else
+        {
+            System.out.println("同学们，下课了...");   
+        }          
+    }
+}
+```
+### 模式的应用场景
+通过前面的分析与应用实例可知观察者模式适合以下几种情形。
+- 1.对象间存在一对多关系，一个对象的状态发生改变会影响其他对象。
+- 2.当一个抽象模型有两个方面，其中一个方面依赖于另一方面时，可将这二者封装在独立的对象中以使它们可以各自独立地改变和复用。
 
 
+### 模式的扩展
+在 Java 中，通过 java.util.Observable 类和 java.util.Observer 接口定义了观察者模式，只要实现它们的子类就可以编写观察者模式实例。
+<br/>
+#### 1. Observable类
+Observable 类是抽象目标类，它有一个 Vector 向量，用于保存所有要通知的观察者对象，下面来介绍它最重要的 3 个方法。
+- 1.void addObserver(Observer o) 方法：用于将新的观察者对象添加到向量中。
+- 2.void notifyObservers(Object arg) 方法：调用向量中的所有观察者对象的 update。方法，通知它们数据发生改变。通常越晚加入向量的观察者越先得到通知。
+- 3.void setChange() 方法：用来设置一个 boolean 类型的内部标志位，注明目标对象发生了变化。当它为真时，notifyObservers() 才会通知观察者。
 
+#### 2. Observer 接口
+Observer 接口是抽象观察者，它监视目标对象的变化，当目标对象发生变化时，观察者得到通知，并调用 void update(Observable o,Object arg) 方法，进行相应的工作。
+<br/>
+#### 【例3】利用 Observable 类和 Observer 接口实现原油期货的观察者模式实例。
+分析：当原油价格上涨时，空方伤心，多方局兴；当油价下跌时，空方局兴，多方伤心。本实例中的抽象目标（Observable)类在 Java 中已经定义，可以直接定义其子类，即原油期货（OilFutures)类，它是具体目标类，该类中定义一个 SetPriCe(float price) 方法，当原油数据发生变化时调用其父类的 notifyObservers(Object arg) 方法来通知所有观察者；另外，本实例中的抽象观察者接口（Observer）在 Java 中已经定义，只要定义其子类，即具体观察者类（包括多方类 Bull 和空方类 Bear），并实现 update(Observable o,Object arg) 方法即可。图 5 所示是其结构图。
+<br/>
+![](/images/design/73.gif)
+<br/>
+图5 原油期货的观察者模式实例的结构图
+```java
+package observer;
+import java.util.Observer;
+import java.util.Observable;
+public class CrudeOilFutures
+{
+    public static void main(String[] args)
+    {
+        OilFutures oil=new OilFutures();
+        Observer bull=new Bull(); //多方
+        Observer bear=new Bear(); //空方
+        oil.addObserver(bull);
+        oil.addObserver(bear);
+        oil.setPrice(10);
+        oil.setPrice(-8);
+    }
+}
+//具体目标类：原油期货
+class OilFutures extends Observable
+{
+    private float price;   
+    public float getPrice()
+    {
+        return this.price; 
+    }
+    public void setPrice(float price)
+    {
+        super.setChanged() ;  //设置内部标志位，注明数据发生变化 
+        super.notifyObservers(price);    //通知观察者价格改变了 
+        this.price=price ; 
+    }
+}
+//具体观察者类：多方
+class Bull implements Observer
+{   
+    public void update(Observable o,Object arg)
+    {
+        Float price=((Float)arg).floatValue();
+        if(price>0)
+        {
+            System.out.println("油价上涨"+price+"元，多方高兴了！");
+        }
+        else
+        {
+            System.out.println("油价下跌"+(-price)+"元，多方伤心了！");
+        }
+    }
+}
+//具体观察者类：空方
+class Bear implements Observer
+{   
+    public void update(Observable o,Object arg)
+    {
+        Float price=((Float)arg).floatValue();
+        if(price>0)
+        {
+            System.out.println("油价上涨"+price+"元，空方伤心了！");
+        }
+        else
+        {
+            System.out.println("油价下跌"+(-price)+"元，空方高兴了！");
+        }
+    }
+}
+```
 
+## 19.中介者模式（详解版）
+在现实生活中，常常会出现好多对象之间存在复杂的交互关系，这种交互关系常常是“网状结构”，它要求每个对象都必须知道它需要交互的对象。例如，每个人必须记住他（她）所有朋友的电话；而且，朋友中如果有人的电话修改了，他（她）必须告诉其他所有的朋友修改，这叫作“牵一发而动全身”，非常复杂。
+<br/>
+如果把这种“网状结构”改为“星形结构”的话，将大大降低它们之间的“耦合性”，这时只要找一个“中介者”就可以了。如前面所说的“每个人必须记住所有朋友电话”的问题，只要在网上建立一个每个朋友都可以访问的“通信录”就解决了。这样的例子还有很多，例如，你刚刚参力口工作想租房，可以找“房屋中介”；或者，自己刚刚到一个陌生城市找工作，可以找“人才交流中心”帮忙。
+<br/>
+在软件的开发过程中，这样的例子也很多，例如，在 MVC 框架中，控制器（C）就是模型（M）和视图（V）的中介者；还有大家常用的 QQ 聊天程序的“中介者”是 QQ 服务器。所有这些，都可以采用“中介者模式”来实现，它将大大降低对象之间的耦合性，提高系统的灵活性。
 
+### 模式的定义与特点
+中介者（Mediator）模式的定义：定义一个中介对象来封装一系列对象之间的交互，使原有对象之间的耦合松散，且可以独立地改变它们之间的交互。中介者模式又叫调停模式，它是迪米特法则的典型应用。
+<br/>
+中介者模式是一种对象行为型模式，其主要优点如下。
+- 1.降低了对象之间的耦合性，使得对象易于独立地被复用。
+- 2.将对象间的一对多关联转变为一对一的关联，提高系统的灵活性，使得系统易于维护和扩展。
+<br/>
+其主要缺点是：当同事类太多时，中介者的职责将很大，它会变得复杂而庞大，以至于系统难以维护。
+
+### 模式的结构与实现
+中介者模式实现的关键是找出“中介者”，下面对它的结构和实现进行分析。
+#### 1. 模式的结构
+中介者模式包含以下主要角色。
+- 1.抽象中介者（Mediator）角色：它是中介者的接口，提供了同事对象注册与转发同事对象信息的抽象方法。
+- 2.具体中介者（ConcreteMediator）角色：实现中介者接口，定义一个 List 来管理同事对象，协调各个同事角色之间的交互关系，因此它依赖于同事角色。
+- 3.抽象同事类（Colleague）角色：定义同事类的接口，保存中介者对象，提供同事对象交互的抽象方法，实现所有相互影响的同事类的公共功能。
+- 4.具体同事类（Concrete Colleague）角色：是抽象同事类的实现者，当需要与其他同事对象交互时，由中介者对象负责后续的交互。
+<br/>
+中介者模式的结构图如图 1 所示
+<br/>
+![](/images/design/73.gif)
+<br/>
+图1 中介者模式的结构图
+<br/>
+### 2. 模式的实现
+中介者模式的实现代码如下：
+```java
+package mediator;
+import java.util.*;
+public class MediatorPattern
+{
+    public static void main(String[] args)
+    {
+        Mediator md=new ConcreteMediator();
+        Colleague c1,c2;
+        c1=new ConcreteColleague1();
+        c2=new ConcreteColleague2();
+        md.register(c1);
+        md.register(c2);
+        c1.send();
+        System.out.println("-------------");
+        c2.send();
+    }
+}
+//抽象中介者
+abstract class Mediator
+{
+    public abstract void register(Colleague colleague);
+    public abstract void relay(Colleague cl); //转发
+}
+//具体中介者
+class ConcreteMediator extends Mediator
+{
+    private List<Colleague> colleagues=new ArrayList<Colleague>();
+    public void register(Colleague colleague)
+    {
+        if(!colleagues.contains(colleague))
+        {
+            colleagues.add(colleague);
+            colleague.setMedium(this);
+        }
+    }
+    public void relay(Colleague cl)
+    {
+        for(Colleague ob:colleagues)
+        {
+            if(!ob.equals(cl))
+            {
+                ((Colleague)ob).receive();
+            }   
+        }
+    }
+}
+//抽象同事类
+abstract class Colleague
+{
+    protected Mediator mediator;
+    public void setMedium(Mediator mediator)
+    {
+        this.mediator=mediator;
+    }   
+    public abstract void receive();   
+    public abstract void send();
+}
+//具体同事类
+class ConcreteColleague1 extends Colleague
+{
+    public void receive()
+    {
+        System.out.println("具体同事类1收到请求。");
+    }   
+    public void send()
+    {
+        System.out.println("具体同事类1发出请求。");
+        mediator.relay(this); //请中介者转发
+    }
+}
+//具体同事类
+class ConcreteColleague2 extends Colleague
+{
+    public void receive()
+    {
+        System.out.println("具体同事类2收到请求。");
+    }   
+    public void send()
+    {
+        System.out.println("具体同事类2发出请求。");
+        mediator.relay(this); //请中介者转发
+    }
+}
+```
+
+### 模式的应用实例
+#### 用中介者模式编写一个“韶关房地产交流平台”程序。
+说明：韶关房地产交流平台是“房地产中介公司”提供给“卖方客户”与“买方客户”进行信息交流的平台，比较适合用中介者模式来实现。
+<br/>
+首先，定义一个中介公司（Medium）接口，它是抽象中介者，它包含了客户注册方法 register(Customer member) 和信息转发方法 relay(String from,String ad)；再定义一个韶关房地产中介（EstateMedium）公司，它是具体中介者类，它包含了保存客户信息的 List 对象，并实现了中介公司中的抽象方法。
+<br/>
+然后，定义一个客户（Qistomer）类，它是抽象同事类，其中包含了中介者的对象，和发送信息的 send(String ad) 方法与接收信息的 receive(String from，Stringad) 方法的接口，由于本程序是窗体程序，所以本类继承 JPmme 类，并实现动作事件的处理方法 actionPerformed(ActionEvent e)。
+<br/>
+最后，定义卖方（Seller）类和买方（Buyer）类，它们是具体同事类，是客户（Customer）类的子类，它们实现了父类中的抽象方法，通过中介者类进行信息交流，其结构图如图 2 所示。
+<br/>
+![](/images/design/75.gif)
+<br/>
+图2 韶关房地产交流平台的结构图
+<br/>
+```java
+package mediator;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.*;
+public class DatingPlatform
+{
+    public static void main(String[] args)
+    {
+        Medium md=new EstateMedium();    //房产中介
+        Customer member1,member2;
+        member1=new Seller("张三(卖方)");
+        member2=new Buyer("李四(买方)");
+        md.register(member1); //客户注册
+        md.register(member2);
+    }
+}
+//抽象中介者：中介公司
+interface Medium
+{
+    void register(Customer member); //客户注册
+    void relay(String from,String ad); //转发
+}
+//具体中介者：房地产中介
+class EstateMedium implements Medium
+{
+    private List<Customer> members=new ArrayList<Customer>();   
+    public void register(Customer member)
+    {
+        if(!members.contains(member))
+        {
+            members.add(member);
+            member.setMedium(this);
+        }
+    }   
+    public void relay(String from,String ad)
+    {
+        for(Customer ob:members)
+        {
+            String name=ob.getName();
+            if(!name.equals(from))
+            {
+                ((Customer)ob).receive(from,ad);
+            }   
+        }
+    }
+}
+//抽象同事类：客户
+abstract class Customer extends JFrame implements  ActionListener
+{
+    private static final long serialVersionUID=-7219939540794786080L;
+    protected Medium medium;
+    protected String name;   
+    JTextField SentText;
+    JTextArea ReceiveArea;   
+    public Customer(String name)
+    {
+        super(name);
+        this.name=name;       
+    }
+    void ClientWindow(int x,int y)
+    {       
+        Container cp;        
+        JScrollPane sp;
+        JPanel p1,p2;        
+        cp=this.getContentPane();       
+        SentText=new JTextField(18);
+        ReceiveArea=new JTextArea(10,18);
+        ReceiveArea.setEditable(false);
+        p1=new JPanel();
+        p1.setBorder(BorderFactory.createTitledBorder("接收内容："));       
+        p1.add(ReceiveArea);
+        sp=new JScrollPane(p1);
+        cp.add(sp,BorderLayout.NORTH);        
+        p2=new JPanel();
+        p2.setBorder(BorderFactory.createTitledBorder("发送内容："));       
+        p2.add(SentText);   
+        cp.add(p2,BorderLayout.SOUTH);       
+        SentText.addActionListener(this);       
+        this.setLocation(x,y);
+        this.setSize(250, 330);
+        this.setResizable(false); //窗口大小不可调整
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);      
+        this.setVisible(true);       
+    }
+    public void actionPerformed(ActionEvent e)
+    {
+        String tempInfo=SentText.getText().trim();
+        SentText.setText("");
+        this.send(tempInfo);
+    }
+    public String getName()
+    {    return name;   }
+    public void setMedium(Medium medium)
+    {      this.medium=medium;  }   
+    public abstract void send(String ad);
+    public abstract void receive(String from,String ad);
+}
+//具体同事类：卖方
+class Seller extends Customer
+{
+    private static final long serialVersionUID=-1443076716629516027L;
+    public Seller(String name)
+    {
+        super(name);
+        ClientWindow(50,100);
+    }   
+    public void send(String ad)
+    {
+        ReceiveArea.append("我(卖方)说: "+ad+"\n");
+        //使滚动条滚动到最底端
+        ReceiveArea.setCaretPosition(ReceiveArea.getText().length());
+        medium.relay(name,ad);
+    }
+    public void receive(String from,String ad)
+    {
+        ReceiveArea.append(from +"说: "+ad+"\n");
+        //使滚动条滚动到最底端
+        ReceiveArea.setCaretPosition(ReceiveArea.getText().length());
+    }
+}
+//具体同事类：买方
+class Buyer extends Customer
+{
+    private static final long serialVersionUID = -474879276076308825L;
+    public Buyer(String name)
+    {
+        super(name);
+        ClientWindow(350,100);
+    }   
+    public void send(String ad)
+    {
+        ReceiveArea.append("我(买方)说: "+ad+"\n");
+        //使滚动条滚动到最底端
+        ReceiveArea.setCaretPosition(ReceiveArea.getText().length());
+        medium.relay(name,ad);
+    }
+    public void receive(String from,String ad)
+    {
+          ReceiveArea.append(from +"说: "+ad+"\n");
+        //使滚动条滚动到最底端
+        ReceiveArea.setCaretPosition(ReceiveArea.getText().length());
+    }
+}
+```
+
+### 模式的应用场景
+前面分析了中介者模式的结构与特点，下面分析其以下应用场景。
+- 1.当对象之间存在复杂的网状结构关系而导致依赖关系混乱且难以复用时。
+- 2.当想创建一个运行于多个类之间的对象，又不想生成新的子类时。
+
+### 模式的扩展
+在实际开发中，通常采用以下两种方法来简化中介者模式，使开发变得更简单。
+- 1.不定义中介者接口，把具体中介者对象实现成为单例。
+- 2.同事对象不持有中介者，而是在需要的时直接获取中介者对象并调用。
+<br/>
+图 4 所示是简化中介者模式的结构图。
+![](/images/design/76.gif)
+图4 简化中介者模式的结构图
+<br/>
+```java
+package mediator;
+import java.util.*;
+public class SimpleMediatorPattern
+{
+    public static void main(String[] args)
+    {
+        SimpleColleague c1,c2;
+        c1=new SimpleConcreteColleague1();
+        c2=new SimpleConcreteColleague2();
+        c1.send();
+        System.out.println("-----------------");
+        c2.send();
+    }
+}
+//简单单例中介者
+class SimpleMediator
+{
+    private static SimpleMediator smd=new SimpleMediator();   
+    private List<SimpleColleague> colleagues=new ArrayList<SimpleColleague>();   
+    private SimpleMediator(){}   
+    public static SimpleMediator getMedium()
+    {    return(smd);   }
+    public void register(SimpleColleague colleague)
+    {
+        if(!colleagues.contains(colleague))
+        {
+            colleagues.add(colleague);
+        }
+    }
+    public void relay(SimpleColleague scl)
+    {       
+        for(SimpleColleague ob:colleagues)
+        {
+            if(!ob.equals(scl))
+            {
+                ((SimpleColleague)ob).receive();
+            }   
+        }
+    }
+}
+//抽象同事类
+interface SimpleColleague
+{
+    void receive();   
+    void send();
+}
+//具体同事类
+class SimpleConcreteColleague1 implements SimpleColleague
+{
+    SimpleConcreteColleague1(){
+        SimpleMediator smd=SimpleMediator.getMedium();
+        smd.register(this);
+    }
+    public void receive()
+    {    System.out.println("具体同事类1：收到请求。");    }   
+    public void send()
+    {
+        SimpleMediator smd=SimpleMediator.getMedium();
+        System.out.println("具体同事类1：发出请求...");
+        smd.relay(this); //请中介者转发
+    }
+}
+//具体同事类
+class SimpleConcreteColleague2 implements SimpleColleague
+{
+    SimpleConcreteColleague2(){
+        SimpleMediator smd=SimpleMediator.getMedium();
+        smd.register(this);
+    }
+    public void receive()
+    {    System.out.println("具体同事类2：收到请求。");    }   
+    public void send()
+    {
+        SimpleMediator smd=SimpleMediator.getMedium();
+        System.out.println("具体同事类2：发出请求...");
+        smd.relay(this); //请中介者转发
+    }
+}
+```
+
+## 20.迭代器模式（详解版）
+在现实生活以及程序设计中，经常要访问一个聚合对象中的各个元素，如“[数据结构](http://c.biancheng.net/data_structure/)”中的链表遍历，通常的做法是将链表的创建和遍历都放在同一个类中，但这种方式不利于程序的扩展，如果要更换遍历方法就必须修改程序源代码，这违背了 “开闭原则”。
+<br/>
+既然将遍历方法封装在聚合类中不可取，那么聚合类中不提供遍历方法，将遍历方法由用户自己实现是否可行呢？答案是同样不可取，因为这种方式会存在两个缺点：
+- 1.暴露了聚合类的内部表示，使其数据不安全；
+- 2.增加了客户的负担。
+<br/>
+“迭代器模式”能较好地克服以上缺点，它在客户访问类与聚合类之间插入一个迭代器，这分离了聚合对象与其遍历行为，对客户也隐藏了其内部细节，且满足“单一职责原则”和“开闭原则”，如 Java 中的 Collection、List、Set、Map 等都包含了迭代器。
+### 模式的定义与特点
+迭代器（Iterator）模式的定义：提供一个对象来顺序访问聚合对象中的一系列数据，而不暴露聚合对象的内部表示。迭代器模式是一种对象行为型模式，其主要优点如下。
+- 1.访问一个聚合对象的内容而无须暴露它的内部表示。
+- 2.遍历任务交由迭代器完成，这简化了聚合类。
+- 3.它支持以不同方式遍历一个聚合，甚至可以自定义迭代器的子类以支持新的遍历。
+- 4.增加新的聚合类和迭代器类都很方便，无须修改原有代码。
+- 5.封装性良好，为遍历不同的聚合结构提供一个统一的接口。
+<br/>
+其主要缺点是：增加了类的个数，这在一定程度上增加了系统的复杂性。
+<br/>
+### 模式的结构与实现
+迭代器模式是通过将聚合对象的遍历行为分离出来，抽象成迭代器类来实现的，其目的是在不暴露聚合对象的内部结构的情况下，让外部代码透明地访问聚合的内部数据。现在我们来分析其基本结构与实现方法。
+<br/>
+#### 1. 模式的结构
+迭代器模式主要包含以下角色。
+- 1.抽象聚合（Aggregate）角色：定义存储、添加、删除聚合对象以及创建迭代器对象的接口。
+- 2.具体聚合（ConcreteAggregate）角色：实现抽象聚合类，返回一个具体迭代器的实例。
+- 3.抽象迭代器（Iterator）角色：定义访问和遍历聚合元素的接口，通常包含 hasNext()、first()、next() 等方法。
+- 4.具体迭代器（Concretelterator）角色：实现抽象迭代器接口中所定义的方法，完成对聚合对象的遍历，记录遍历的当前位置。
+<br/>
+其结构图如图 1 所示。
+<br/>
+![](/images/design/77.gif)
+<br/>
+图1 迭代器模式的结构图
+<br/>
+#### 2. 模式的实现
+迭代器模式的实现代码如下：
+```java
+package iterator;
+import java.util.*;
+public class IteratorPattern
+{
+    public static void main(String[] args)
+    {
+        Aggregate ag=new ConcreteAggregate(); 
+        ag.add("中山大学"); 
+        ag.add("华南理工"); 
+        ag.add("韶关学院");
+        System.out.print("聚合的内容有：");
+        Iterator it=ag.getIterator(); 
+        while(it.hasNext())
+        { 
+            Object ob=it.next(); 
+            System.out.print(ob.toString()+"\t"); 
+        }
+        Object ob=it.first();
+        System.out.println("\nFirst："+ob.toString());
+    }
+}
+//抽象聚合
+interface Aggregate
+{ 
+    public void add(Object obj); 
+    public void remove(Object obj); 
+    public Iterator getIterator(); 
+}
+//具体聚合
+class ConcreteAggregate implements Aggregate
+{ 
+    private List<Object> list=new ArrayList<Object>(); 
+    public void add(Object obj)
+    { 
+        list.add(obj); 
+    }
+    public void remove(Object obj)
+    { 
+        list.remove(obj); 
+    }
+    public Iterator getIterator()
+    { 
+        return(new ConcreteIterator(list)); 
+    }     
+}
+//抽象迭代器
+interface Iterator
+{
+    Object first();
+    Object next();
+    boolean hasNext();
+}
+//具体迭代器
+class ConcreteIterator implements Iterator
+{ 
+    private List<Object> list=null; 
+    private int index=-1; 
+    public ConcreteIterator(List<Object> list)
+    { 
+        this.list=list; 
+    } 
+    public boolean hasNext()
+    { 
+        if(index<list.size()-1)
+        { 
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    public Object first()
+    {
+        index=0;
+        Object obj=list.get(index);;
+        return obj;
+    }
+    public Object next()
+    { 
+        Object obj=null; 
+        if(this.hasNext())
+        { 
+            obj=list.get(++index); 
+        } 
+        return obj; 
+    }   
+}
+```
+### 模式的应用实例
+#### 【例1】用迭代器模式编写一个浏览婺源旅游风景图的程序。
+分析：婺源的名胜古迹较多，要设计一个查看相关景点图片（[点此下载本实例所要显示的景点图片](http://c.biancheng.net/uploads/soft/181113/3-1Q1161Q640.zip)）和简介的程序，用“迭代器模式”设计比较合适。
+<br/>
+首先，设计一个婺源景点（WyViewSpot）类来保存每张图片的名称与简介；再设计一个景点集（ViewSpotSet）接口，它是抽象聚合类，提供了增加和删除婺源景点的方法，以及获取迭代器的方法。
+<br/>
+然后，定义一个婺源景点集（WyViewSpotSet）类，它是具体聚合类，用 ArrayList 来保存所有景点信息，并实现父类中的抽象方法；再定义婺源景点的抽象迭代器（ViewSpotltemtor）接口，其中包含了查看景点信息的相关方法。
+<br/>
+最后，定义婺源景点的具体迭代器（WyViewSpotlterator）类，它实现了父类的抽象方法；客户端程序设计成窗口程序，它初始化婺源景点集（ViewSpotSet）中的数据，并实现 ActionListener 接口，它通过婺源景点迭代器（ViewSpotlterator）来査看婺源景点（WyViewSpot）的信息。图 2 所示是其结构图。
+<br/>
+![](/images/design/78.gif)
+<br/>
+图2 婺源旅游风景图浏览程序的结构图
+<br/>
+```java
+package iterator;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import javax.swing.*;
+public class PictureIterator{
+    public static void main(String[] args)
+    {
+        new PictureFrame();
+    }
+}
+//相框类
+class PictureFrame extends JFrame implements ActionListener
+{
+    private static final long serialVersionUID=1L;
+    ViewSpotSet ag; //婺源景点集接口
+    ViewSpotIterator it; //婺源景点迭代器接口
+    WyViewSpot ob;    //婺源景点类
+    PictureFrame()
+    {
+        super("中国最美乡村“婺源”的部分风景图");
+        this.setResizable(false);
+        ag=new WyViewSpotSet(); 
+        ag.add(new WyViewSpot("江湾","江湾景区是婺源的一个国家5A级旅游景区，景区内有萧江宗祠、永思街、滕家老屋、婺源人家、乡贤园、百工坊等一大批古建筑，精美绝伦，做工精细。")); 
+        ag.add(new WyViewSpot("李坑","李坑村是一个以李姓聚居为主的古村落，是国家4A级旅游景区，其建筑风格独特，是著名的徽派建筑，给人一种安静、祥和的感觉。")); 
+        ag.add(new WyViewSpot("思溪延村","思溪延村位于婺源县思口镇境内，始建于南宋庆元五年（1199年），当时建村者俞氏以（鱼）思清溪水而名。"));
+        ag.add(new WyViewSpot("晓起村","晓起有“中国茶文化第一村”与“国家级生态示范村”之美誉，村屋多为清代建筑，风格各具特色，村中小巷均铺青石，曲曲折折，回环如棋局。")); 
+        ag.add(new WyViewSpot("菊径村","菊径村形状为山环水绕型，小河成大半圆型，绕村庄将近一周，四周为高山环绕，符合中国的八卦“后山前水”设计，当地人称“脸盆村”。")); 
+        ag.add(new WyViewSpot("篁岭","篁岭是著名的“晒秋”文化起源地，也是一座距今近六百历史的徽州古村；篁岭属典型山居村落，民居围绕水口呈扇形梯状错落排布。"));
+        ag.add(new WyViewSpot("彩虹桥","彩虹桥是婺源颇有特色的带顶的桥——廊桥，其不仅造型优美，而且它可在雨天里供行人歇脚，其名取自唐诗“两水夹明镜，双桥落彩虹”。")); 
+        ag.add(new WyViewSpot("卧龙谷","卧龙谷是国家4A级旅游区，这里飞泉瀑流泄银吐玉、彩池幽潭碧绿清新、山峰岩石挺拔奇巧，活脱脱一幅天然泼墨山水画。"));
+        it = ag.getIterator(); //获取婺源景点迭代器 
+        ob = it.first(); 
+        this.showPicture(ob.getName(),ob.getIntroduce());
+    }
+    //显示图片
+    void showPicture(String Name,String Introduce)
+    {       
+        Container cp=this.getContentPane();       
+        JPanel picturePanel=new JPanel();
+        JPanel controlPanel=new JPanel();       
+        String FileName="src/iterator/Picture/"+Name+".jpg";
+        JLabel lb=new JLabel(Name,new ImageIcon(FileName),JLabel.CENTER);   
+        JTextArea ta=new JTextArea(Introduce);       
+        lb.setHorizontalTextPosition(JLabel.CENTER);
+        lb.setVerticalTextPosition(JLabel.TOP);
+        lb.setFont(new Font("宋体",Font.BOLD,20));
+        ta.setLineWrap(true);       
+        ta.setEditable(false);
+        //ta.setBackground(Color.orange);
+        picturePanel.setLayout(new BorderLayout(5,5));
+        picturePanel.add("Center",lb);       
+        picturePanel.add("South",ta);       
+        JButton first, last, next, previous;
+        first=new JButton("第一张");
+        next=new JButton("下一张");
+        previous=new JButton("上一张");
+        last=new JButton("最末张");
+        first.addActionListener(this);
+        next.addActionListener(this);
+        previous.addActionListener(this);
+        last.addActionListener(this);        
+        controlPanel.add(first);
+        controlPanel.add(next);
+        controlPanel.add(previous);
+        controlPanel.add(last);       
+        cp.add("Center",picturePanel);
+        cp.add("South",controlPanel);
+        this.setSize(630, 550);
+        this.setVisible(true);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+    @Override
+    public void actionPerformed(ActionEvent arg0)
+    {
+        String command=arg0.getActionCommand();
+        if(command.equals("第一张"))
+        {
+            ob=it.first(); 
+            this.showPicture(ob.getName(),ob.getIntroduce());
+        }
+        else if(command.equals("下一张"))
+        {
+            ob=it.next(); 
+            this.showPicture(ob.getName(),ob.getIntroduce());
+        }
+        else if(command.equals("上一张"))
+        {
+            ob=it.previous(); 
+            this.showPicture(ob.getName(),ob.getIntroduce());
+        }
+        else if(command.equals("最末张"))
+        {
+            ob=it.last(); 
+            this.showPicture(ob.getName(),ob.getIntroduce());
+        }
+    }
+}
+//婺源景点类
+class WyViewSpot
+{
+    private String Name;
+    private String Introduce;
+    WyViewSpot(String Name,String Introduce)
+    {
+        this.Name=Name;
+        this.Introduce=Introduce;
+    }
+    public String getName()
+    {
+        return Name;
+    }
+    public String getIntroduce()
+    {
+        return Introduce;
+    }
+}
+//抽象聚合：婺源景点集接口
+interface ViewSpotSet
+{ 
+    void add(WyViewSpot obj); 
+    void remove(WyViewSpot obj); 
+    ViewSpotIterator getIterator(); 
+}
+//具体聚合：婺源景点集
+class WyViewSpotSet implements ViewSpotSet
+{ 
+    private ArrayList<WyViewSpot> list=new ArrayList<WyViewSpot>(); 
+    public void add(WyViewSpot obj)
+    { 
+        list.add(obj); 
+    }
+    public void remove(WyViewSpot obj)
+    { 
+        list.remove(obj); 
+    }
+    public ViewSpotIterator getIterator()
+    { 
+        return(new WyViewSpotIterator(list)); 
+    }     
+}
+//抽象迭代器：婺源景点迭代器接口
+interface ViewSpotIterator
+{
+    boolean hasNext();
+    WyViewSpot first();
+    WyViewSpot next();
+    WyViewSpot previous();
+    WyViewSpot last(); 
+}
+//具体迭代器：婺源景点迭代器
+class WyViewSpotIterator implements ViewSpotIterator
+{ 
+    private ArrayList<WyViewSpot> list=null; 
+    private int index=-1;
+    WyViewSpot obj=null;
+    public WyViewSpotIterator(ArrayList<WyViewSpot> list)
+    {
+        this.list=list; 
+    } 
+    public boolean hasNext()
+    { 
+        if(index<list.size()-1)
+        { 
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    public WyViewSpot first()
+    {
+        index=0;
+        obj=list.get(index);
+        return obj;
+    }
+    public WyViewSpot next()
+    {         
+        if(this.hasNext())
+        { 
+            obj=list.get(++index);
+        } 
+        return obj; 
+    }
+    public WyViewSpot previous()
+    { 
+        if(index>0)
+        { 
+            obj=list.get(--index); 
+        } 
+        return obj; 
+    }
+    public WyViewSpot last()
+    {
+        index=list.size()-1;
+        obj=list.get(index);
+        return obj;
+    }
+}
+```
+
+### 模式的应用场景
+前面介绍了关于迭代器模式的结构与特点，下面介绍其应用场景，迭代器模式通常在以下几种情况使用。
+- 1.当需要为聚合对象提供多种遍历方式时。
+- 2.当需要为遍历不同的聚合结构提供一个统一的接口时。
+- 3.当访问一个聚合对象的内容而无须暴露其内部细节的表示时。
+<br/>
+由于聚合与迭代器的关系非常密切，所以大多数语言在实现聚合类时都提供了迭代器类，因此大数情况下使用语言中已有的聚合类的迭代器就已经够了。
+<br/>
+
+### 模式的扩展
+迭代器模式常常与[组合模式](http://c.biancheng.net/view/1373.html)结合起来使用，在对组合模式中的容器构件进行访问时，经常将迭代器潜藏在组合模式的容器构成类中。当然，也可以构造一个外部迭代器来对容器构件进行访问，其结构图如图 4 所示。
+![](/images/design/79.gif)
+<br/>
+图4 组合迭代器模式的结构图
+
+## 21.访问者模式（Visitor模式）详解
 
 
 
