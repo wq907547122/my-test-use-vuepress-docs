@@ -5994,12 +5994,925 @@ class WyViewSpotIterator implements ViewSpotIterator
 图4 组合迭代器模式的结构图
 
 ## 21.访问者模式（Visitor模式）详解
+在现实生活中，有些集合对象中存在多种不同的元素，且每种元素也存在多种不同的访问者和处理方式。例如，公园中存在多个景点，也存在多个游客，不同的游客对同一个景点的评价可能不同；医院医生开的处方单中包含多种药元素，査看它的划价员和药房工作人员对它的处理方式也不同，划价员根据处方单上面的药品名和数量进行划价，药房工作人员根据处方单的内容进行抓药。
+<br/>
+这样的例子还有很多，例如，电影或电视剧中的人物角色，不同的观众对他们的评价也不同；还有顾客在商场购物时放在“购物车”中的商品，顾客主要关心所选商品的性价比，而收银员关心的是商品的价格和数量。
+<br/>
+这些被处理的数据元素相对稳定而访问方式多种多样的数据结构，如果用“访问者模式”来处理比较方便。访问者模式能把处理方法从数据结构中分离出来，并可以根据需要增加新的处理方法，且不用修改原来的程序代码与数据结构，这提高了程序的扩展性和灵活性。
+<br/>
+### 模式的定义与特点
+访问者（Visitor）模式的定义：将作用于某种数据结构中的各元素的操作分离出来封装成独立的类，使其在不改变数据结构的前提下可以添加作用于这些元素的新的操作，为数据结构中的每个元素提供多种访问方式。它将对数据的操作与数据结构进行分离，是行为类模式中最复杂的一种模式。
+<br/>
+访问者（Visitor）模式是一种对象行为型模式，其主要优点如下。
+- 1.扩展性好。能够在不修改对象结构中的元素的情况下，为对象结构中的元素添加新的功能。
+- 2.复用性好。可以通过访问者来定义整个对象结构通用的功能，从而提高系统的复用程度。
+- 3.灵活性好。访问者模式将数据结构与作用于结构上的操作解耦，使得操作集合可相对自由地演化而不影响系统的数据结构。
+- 4.符合单一职责原则。访问者模式把相关的行为封装在一起，构成一个访问者，使每一个访问者的功能都比较单一。
+<br/>
+访问者（Visitor）模式的主要缺点如下。
+- 1.增加新的元素类很困难。在访问者模式中，每增加一个新的元素类，都要在每一个具体访问者类中增加相应的具体操作，这违背了“开闭原则”。
+- 2.破坏封装。访问者模式中具体元素对访问者公布细节，这破坏了对象的封装性。
+- 3.违反了依赖倒置原则。访问者模式依赖了具体类，而没有依赖抽象类。
+<br/>
+### 模式的结构与实现
+访问者（Visitor）模式实现的关键是如何将作用于元素的操作分离出来封装成独立的类，其基本结构与实现方法如下。
+<br/>
+#### 1. 模式的结构
+访问者模式包含以下主要角色。
+- 1.抽象访问者（Visitor）角色：定义一个访问具体元素的接口，为每个具体元素类对应一个访问操作 visit() ，该操作中的参数类型标识了被访问的具体元素。
+- 2.具体访问者（ConcreteVisitor）角色：实现抽象访问者角色中声明的各个访问操作，确定访问者访问一个元素时该做什么。
+- 3.抽象元素（Element）角色：声明一个包含接受操作 accept() 的接口，被接受的访问者对象作为 accept() 方法的参数。
+- 4.具体元素（ConcreteElement）角色：实现抽象元素角色提供的 accept() 操作，其方法体通常都是 visitor.visit(this) ，另外具体元素中可能还包含本身业务逻辑的相关操作。
+- 5.对象结构（Object Structure）角色：是一个包含元素角色的容器，提供让访问者对象遍历容器中的所有元素的方法，通常由 List、Set、Map 等聚合类实现。
+<br/>
+其结构图如图 1 所示。
+<br/>
+![](/images/design/80.gif)
+<br/>
+图1 访问者（Visitor）模式的结构图
+<br/>
+#### 2. 模式的实现
+访问者模式的实现代码如下：
+```java
+package visitor;
+import java.util.*;
+public class VisitorPattern
+{
+    public static void main(String[] args)
+    {
+        ObjectStructure os=new ObjectStructure();
+        os.add(new ConcreteElementA());
+        os.add(new ConcreteElementB());
+        Visitor visitor=new ConcreteVisitorA();
+        os.accept(visitor);
+        System.out.println("------------------------");
+        visitor=new ConcreteVisitorB();
+        os.accept(visitor);
+    }
+}
+//抽象访问者
+interface Visitor
+{
+    void visit(ConcreteElementA element);
+    void visit(ConcreteElementB element);
+}
+//具体访问者A类
+class ConcreteVisitorA implements Visitor
+{
+    public void visit(ConcreteElementA element)
+    {
+        System.out.println("具体访问者A访问-->"+element.operationA());
+    }
+    public void visit(ConcreteElementB element)
+    {
+        System.out.println("具体访问者A访问-->"+element.operationB());
+    }
+}
+//具体访问者B类
+class ConcreteVisitorB implements Visitor
+{
+    public void visit(ConcreteElementA element)
+    {
+        System.out.println("具体访问者B访问-->"+element.operationA());
+    }
+    public void visit(ConcreteElementB element)
+    {
+        System.out.println("具体访问者B访问-->"+element.operationB());
+    }
+}
+//抽象元素类
+interface Element
+{
+    void accept(Visitor visitor);
+}
+//具体元素A类
+class ConcreteElementA implements Element
+{
+    public void accept(Visitor visitor)
+    {
+        visitor.visit(this);
+    }
+    public String operationA()
+    {
+        return "具体元素A的操作。";
+    }
+}
+//具体元素B类
+class ConcreteElementB implements Element
+{
+    public void accept(Visitor visitor)
+    {
+        visitor.visit(this);
+    }
+    public String operationB()
+    {
+        return "具体元素B的操作。";
+    }
+}
+//对象结构角色
+class ObjectStructure
+{   
+    private List<Element> list=new ArrayList<Element>();   
+    public void accept(Visitor visitor)
+    {
+        Iterator<Element> i=list.iterator();
+        while(i.hasNext())
+        {
+            ((Element) i.next()).accept(visitor);
+        }      
+    }
+    public void add(Element element)
+    {
+        list.add(element);
+    }
+    public void remove(Element element)
+    {
+        list.remove(element);
+    }
+}
+```
+### 模式的应用实例
+#### 【例1】利用“访问者（Visitor）模式”模拟艺术公司与造币公司的功能。
+分析：艺术公司利用“铜”可以设计出铜像，利用“纸”可以画出图画；造币公司利用“铜”可以印出铜币，利用“纸”可以印出纸币（[点此下载运行该程序后所要显示的图片](http://c.biancheng.net/uploads/soft/181113/3-1Q119103045.zip)）。对“铜”和“纸”这两种元素，两个公司的处理方法不同，所以该实例用访问者模式来实现比较适合。
+<br/>
+首先，定义一个公司（Company）接口，它是抽象访问者，提供了两个根据纸（Paper）或铜（Cuprum）这两种元素创建作品的方法；再定义艺术公司（ArtCompany）类和造币公司（Mint）类，它们是具体访问者，实现了父接口的方法；然后，定义一个材料（Material）接口，它是抽象元素，提供了 accept（Company visitor）方法来接受访问者（Company）对象访问；再定义纸（Paper）类和铜（Cuprum）类，它们是具体元素类，实现了父接口中的方法；最后，定义一个材料集（SetMaterial）类，它是对象结构角色，拥有保存所有元素的容器 List，并提供让访问者对象遍历容器中的所有元素的 accept（Company visitor）方法；客户类设计成窗体程序，它提供材料集（SetMaterial）对象供访问者（Company）对象访问，实现了 ItemListener 接口，处理用户的事件请求。图 2 所示是其结构图。
+<br/>
+![](/images/design/81.gif)
+<br/>
+图2 艺术公司与造币公司的结构图
+<br/>
+```java
+package visitor;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.*;
+public class VisitorProducer
+{
+    public static void main(String[] args)
+    {
+        new MaterialWin();       
+    }
+}
+//窗体类
+class MaterialWin extends JFrame implements ItemListener
+{
+    private static final long serialVersionUID=1L;   
+    JPanel CenterJP;
+    SetMaterial os;    //材料集对象
+    Company visitor1,visitor2;    //访问者对象
+    String[] select;
+    MaterialWin()
+    {
+        super("利用访问者模式设计艺术公司和造币公司");
+        JRadioButton Art;
+        JRadioButton mint;           
+        os=new SetMaterial();     
+        os.add(new Cuprum());
+        os.add(new Paper());
+        visitor1=new ArtCompany();//艺术公司
+        visitor2=new Mint(); //造币公司      
+        this.setBounds(10,10,750,350);            
+        this.setResizable(false);       
+        CenterJP=new JPanel();       
+        this.add("Center",CenterJP);      
+        JPanel SouthJP=new JPanel();
+        JLabel yl=new JLabel("原材料有：铜和纸，请选择生产公司：");
+        Art=new JRadioButton("艺术公司",true);
+        mint=new JRadioButton("造币公司");
+        Art.addItemListener(this);
+        mint.addItemListener(this);       
+        ButtonGroup group=new ButtonGroup();
+        group.add(Art);
+        group.add(mint);
+        SouthJP.add(yl);
+        SouthJP.add(Art);
+        SouthJP.add(mint);
+        this.add("South",SouthJP);       
+        select=(os.accept(visitor1)).split(" ");    //获取产品名
+        showPicture(select[0],select[1]);    //显示产品
+    }
+    //显示图片
+    void showPicture(String Cuprum,String paper)
+    {
+        CenterJP.removeAll();    //清除面板内容
+        CenterJP.repaint();    //刷新屏幕
+        String FileName1="src/visitor/Picture/"+Cuprum+".jpg";
+        String FileName2="src/visitor/Picture/"+paper+".jpg";
+        JLabel lb=new JLabel(new ImageIcon(FileName1),JLabel.CENTER);
+        JLabel rb=new JLabel(new ImageIcon(FileName2),JLabel.CENTER);
+        CenterJP.add(lb);
+        CenterJP.add(rb);
+        this.setVisible(true);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);            
+    }
+    @Override
+    public void itemStateChanged(ItemEvent arg0)
+    {
+        JRadioButton jc=(JRadioButton) arg0.getSource();
+        if (jc.isSelected())
+        {
+            if (jc.getText()=="造币公司")
+            {
+                select=(os.accept(visitor2)).split(" ");
+            }
+            else
+            {            
+                select=(os.accept(visitor1)).split(" ");
+            }
+            showPicture(select[0],select[1]);    //显示选择的产品
+        }    
+    }
+}
+//抽象访问者:公司
+interface Company
+{
+    String create(Paper element);
+    String create(Cuprum element);
+}
+//具体访问者：艺术公司
+class ArtCompany implements Company
+{
+    public String create(Paper element)
+    {
+        return "讲学图";
+    }
+    public String create(Cuprum element)
+    {
+        return "朱熹铜像";
+    }
+}
+//具体访问者：造币公司
+class Mint implements Company
+{
+    public String create(Paper element)
+    {
+        return "纸币";
+    }
+    public String create(Cuprum element)
+    {
+        return "铜币";
+    }
+}
+//抽象元素：材料
+interface Material
+{
+    String accept(Company visitor);
+}
+//具体元素：纸
+class Paper implements Material
+{
+    public String accept(Company visitor)
+    {
+        return(visitor.create(this));
+    }
+}
+//具体元素：铜
+class Cuprum implements Material
+{
+    public String accept(Company visitor)
+    {
+        return(visitor.create(this));
+    }
+}
+//对象结构角色:材料集
+class SetMaterial
+{   
+    private List<Material> list=new ArrayList<Material>();   
+    public String accept(Company visitor)
+    {
+        Iterator<Material> i=list.iterator();
+        String tmp="";
+        while(i.hasNext())
+        {
+            tmp+=((Material) i.next()).accept(visitor)+" ";
+        }
+        return tmp; //返回某公司的作品集     
+    }
+    public void add(Material element)
+    {
+        list.add(element);
+    }
+    public void remove(Material element)
+    {
+        list.remove(element);
+    }
+}
+```
+### 模式的应用场景
+通常在以下情况可以考虑使用访问者（Visitor）模式。
+- 1.对象结构相对稳定，但其操作算法经常变化的程序。
+- 2.对象结构中的对象需要提供多种不同且不相关的操作，而且要避免让这些操作的变化影响对象的结构。
+- 3.对象结构包含很多类型的对象，希望对这些对象实施一些依赖于其具体类型的操作。
+### 模式的扩展
+访问者（Visitor）模式是使用频率较高的一种设计模式，它常常同以下两种设计模式联用。
+- (1)与“[迭代器模式](http://c.biancheng.net/view/1395.html)”联用。因为访问者模式中的“对象结构”是一个包含元素角色的容器，当访问者遍历容器中的所有元素时，常常要用迭代器。如【例1】中的对象结构是用 List 实现的，它通过 List 对象的 Itemtor() 方法获取迭代器。如果对象结构中的聚合类没有提供迭代器，也可以用迭代器模式自定义一个。
+- (2)访问者（Visitor）模式同“组合模式”联用。因为访问者（Visitor）模式中的“元素对象”可能是叶子对象或者是容器对象，如果元素对象包含容器对象，就必须用到组合模式，其结构图如图 4 所示。
+<br/>
+![](/images/design/82.gif)
+<br/>
+图4 包含组合模式的访问者模式的结构图
+## 备忘录模式（详解版）
+每个人都有犯错误的时候，都希望有种“后悔药”能弥补自己的过失，让自己重新开始，但现实是残酷的。在计算机应用中，客户同样会常常犯错误，能否提供“后悔药”给他们呢？当然是可以的，而且是有必要的。这个功能由“备忘录模式”来实现。
+<br/>
+其实很多应用软件都提供了这项功能，如 Word、记事本、Photoshop、Eclipse 等软件在编辑时按 Ctrl+Z 组合键时能撤销当前操作，使文档恢复到之前的状态；还有在 IE 中的后退键、数据库事务管理中的回滚操作、玩游戏时的中间结果存档功能、数据库与操作系统的备份操作、棋类游戏中的悔棋功能等都属于这类。
+<br/>
+备忘录模式能记录一个对象的内部状态，当用户后悔时能撤销当前操作，使数据恢复到它原先的状态。
+<br/>
+### 模式的定义与特点
+备忘录（Memento）模式的定义：在不破坏封装性的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态，以便以后当需要时能将该对象恢复到原先保存的状态。该模式又叫快照模式。
+<br/>
+备忘录模式是一种对象行为型模式，其主要优点如下。
+- 1.提供了一种可以恢复状态的机制。当用户需要时能够比较方便地将数据恢复到某个历史的状态。
+- 2.实现了内部状态的封装。除了创建它的发起人之外，其他对象都不能够访问这些状态信息。
+- 3.简化了发起人类。发起人不需要管理和保存其内部状态的各个备份，所有状态信息都保存在备忘录中，并由管理者进行管理，这符合单一职责原则。
+<br/>
+其主要缺点是：资源消耗大。如果要保存的内部状态信息过多或者特别频繁，将会占用比较大的内存资源。
+<br/>
+### 模式的结构与实现
+备忘录模式的核心是设计备忘录类以及用于管理备忘录的管理者类，现在我们来学习其结构与实现。
+#### 1. 模式的结构
+备忘录模式的主要角色如下。
+- 1.发起人（Originator）角色：记录当前时刻的内部状态信息，提供创建备忘录和恢复备忘录数据的功能，实现其他业务功能，它可以访问备忘录里的所有信息。
+- 2.备忘录（Memento）角色：负责存储发起人的内部状态，在需要的时候提供这些内部状态给发起人。
+- 3.管理者（Caretaker）角色：对备忘录进行管理，提供保存与获取备忘录的功能，但其不能对备忘录的内容进行访问与修改。
+<br/>
+备忘录模式的结构图如图 1 所示。
+<br/>
+![](/images/design/83.gif)
+<br/>
+图1 备忘录模式的结构图
+<br/>
+#### 2. 模式的实现
+备忘录模式的实现代码如下：
+```java
+package memento;
+public class MementoPattern
+{
+    public static void main(String[] args)
+    {
+        Originator or=new Originator();
+        Caretaker cr=new Caretaker();       
+        or.setState("S0"); 
+        System.out.println("初始状态:"+or.getState());           
+        cr.setMemento(or.createMemento()); //保存状态      
+        or.setState("S1"); 
+        System.out.println("新的状态:"+or.getState());        
+        or.restoreMemento(cr.getMemento()); //恢复状态
+        System.out.println("恢复状态:"+or.getState());
+    }
+}
+//备忘录
+class Memento
+{ 
+    private String state; 
+    public Memento(String state)
+    { 
+        this.state=state; 
+    }     
+    public void setState(String state)
+    { 
+        this.state=state; 
+    }
+    public String getState()
+    { 
+        return state; 
+    }
+}
+//发起人
+class Originator
+{ 
+    private String state;     
+    public void setState(String state)
+    { 
+        this.state=state; 
+    }
+    public String getState()
+    { 
+        return state; 
+    }
+    public Memento createMemento()
+    { 
+        return new Memento(state); 
+    } 
+    public void restoreMemento(Memento m)
+    { 
+        this.setState(m.getState()); 
+    } 
+}
+//管理者
+class Caretaker
+{ 
+    private Memento memento;       
+    public void setMemento(Memento m)
+    { 
+        memento=m; 
+    }
+    public Memento getMemento()
+    { 
+        return memento; 
+    }
+}
+```
+### 模式的应用实例
+#### 【例1】利用备忘录模式设计相亲游戏。
+分析：假如有西施、王昭君、貂蝉、杨玉环四大美女同你相亲，你可以选择其中一位作为你的爱人；当然，如果你对前面的选择不满意，还可以重新选择，但希望你不要太花心；这个游戏提供后悔功能，用“备忘录模式”设计比较合适（[点此下载所要显示的四大美女的图片](http://c.biancheng.net/uploads/soft/181113/3-1Q119131144.zip)）。
+<br/>
+首先，先设计一个美女（Girl）类，它是备忘录角色，提供了获取和存储美女信息的功能；然后，设计一个相亲者（You）类，它是发起人角色，它记录当 前时刻的内部状态信息（临时妻子的姓名），并提供创建备忘录和恢复备忘录数据的功能；最后，定义一个美女栈（GirlStack）类，它是管理者角色，负责对备忘录进行管理，用于保存相亲者（You）前面选过的美女信息，不过最多只能保存 4 个，提供后悔功能。
+<br/>
+客户类设计成窗体程序，它包含美女栈（GirlStack）对象和相亲者（You）对象，它实现了 ActionListener 接口的事件处理方法 actionPerformed(ActionEvent e)，并将 4 大美女图像和相亲者（You）选择的美女图像在窗体中显示出来。图 2 所示是其结构图。
+<br/>
+![](/images/design/84.gif)
+<br/>
+图2 相亲游戏的结构图
+<br/>
+```java
+package memento;
+import java.awt.GridLayout;
+import java.awt.event.*;
+import javax.swing.*;
+public class DatingGame
+{
+    public static void main(String[] args)
+    {
+        new DatingGameWin();
+    }
+}
+//客户窗体类
+class DatingGameWin extends JFrame implements ActionListener
+{
+    private static final long serialVersionUID=1L;   
+    JPanel CenterJP,EastJP;
+    JRadioButton girl1,girl2,girl3,girl4;
+    JButton button1,button2;
+    String FileName;
+    JLabel g;
+    You you;
+    GirlStack girls;
+    DatingGameWin()
+    {
+        super("利用备忘录模式设计相亲游戏");
+        you=new You();
+        girls=new GirlStack();       
+        this.setBounds(0,0,900,380);            
+        this.setResizable(false);
+        FileName="src/memento/Photo/四大美女.jpg";   
+        g=new JLabel(new ImageIcon(FileName),JLabel.CENTER);
+        CenterJP=new JPanel();
+        CenterJP.setLayout(new GridLayout(1,4));
+        CenterJP.setBorder(BorderFactory.createTitledBorder("四大美女如下："));
+        CenterJP.add(g);   
+        this.add("Center",CenterJP);
+        EastJP=new JPanel();
+        EastJP.setLayout(new GridLayout(1,1));
+        EastJP.setBorder(BorderFactory.createTitledBorder("您选择的爱人是："));
+        this.add("East",EastJP);
+        JPanel SouthJP=new JPanel();      
+        JLabel info=new JLabel("四大美女有“沉鱼落雁之容、闭月羞花之貌”，您选择谁？");
+        girl1=new JRadioButton("西施",true);
+        girl2=new JRadioButton("貂蝉");
+        girl3=new JRadioButton("王昭君");       
+        girl4=new JRadioButton("杨玉环");
+        button1=new JButton("确定");
+        button2=new JButton("返回");
+        ButtonGroup group=new ButtonGroup();
+        group.add(girl1);
+        group.add(girl2);
+        group.add(girl3);
+        group.add(girl4);
+        SouthJP.add(info);
+        SouthJP.add(girl1);
+        SouthJP.add(girl2);
+        SouthJP.add(girl3);
+        SouthJP.add(girl4);
+        SouthJP.add(button1);
+        SouthJP.add(button2);
+        button1.addActionListener(this);
+        button2.addActionListener(this);
+        this.add("South",SouthJP);        
+        showPicture("空白");
+        you.setWife("空白");
+        girls.push(you.createMemento());    //保存状态
+    }
+    //显示图片
+    void showPicture(String name)
+    {
+        EastJP.removeAll(); //清除面板内容
+        EastJP.repaint(); //刷新屏幕
+        you.setWife(name);        
+        FileName="src/memento/Photo/"+name+".jpg";               
+        g=new JLabel(new ImageIcon(FileName),JLabel.CENTER);                   
+        EastJP.add(g);
+        this.setVisible(true);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);            
+    }
+    @Override
+    public void actionPerformed(ActionEvent e)
+    {
+        boolean ok=false;
+        if(e.getSource()==button1)
+        {
+            ok=girls.push(you.createMemento());    //保存状态  
+            if(ok && girl1.isSelected())
+            {
+                showPicture("西施");
+            }
+            else if(ok && girl2.isSelected())
+            {
+                showPicture("貂蝉");
+            }
+            else if(ok && girl3.isSelected())
+            {
+                showPicture("王昭君");
+            }
+            else if(ok && girl4.isSelected())
+            {
+                showPicture("杨玉环");
+            }               
+        }
+        else if(e.getSource()==button2)
+        {
+            you.restoreMemento(girls.pop()); //恢复状态
+            showPicture(you.getWife());
+        }
+    }
+}
+//备忘录：美女
+class Girl
+{ 
+  private String name;
+  public Girl(String name)
+  { 
+      this.name=name; 
+  }     
+  public void setName(String name)
+  { 
+      this.name=name; 
+  }
+  public String getName()
+  { 
+      return name; 
+  }
+}
+//发起人：您
+class You
+{ 
+    private String wifeName;    //妻子
+    public void setWife(String name)
+    { 
+        wifeName=name; 
+    }
+    public String getWife()
+    { 
+        return wifeName; 
+    }
+    public Girl createMemento()
+    { 
+        return new Girl(wifeName); 
+    }
+    public void restoreMemento(Girl p)
+    { 
+        setWife(p.getName());
+    } 
+}
+//管理者：美女栈
+class GirlStack
+{ 
+    private Girl girl[];
+    private int top;
+    GirlStack()
+    {
+        girl=new Girl[5];
+        top=-1;
+    }
+    public boolean push(Girl p)
+    {
+        if(top>=4)
+        {
+            System.out.println("你太花心了，变来变去的！");
+            return false;
+        }
+        else
+        {
+            girl[++top]=p;
+            return true;
+        }
+    }
+    public Girl pop()
+    {
+        if(top<=0)
+        {
+            System.out.println("美女栈空了！");
+            return girl[0];
+        }
+        else return girl[top--]; 
+    }
+}
+```
+### 模式的应用场景
+前面学习了备忘录模式的定义与特点、结构与实现，现在来看该模式的以下应用场景。
+- 1.需要保存与恢复数据的场景，如玩游戏时的中间结果的存档功能。
+- 2.需要提供一个可回滚操作的场景，如 Word、记事本、Photoshop，Eclipse 等软件在编辑时按 Ctrl+Z 组合键，还有数据库中事务操作。
+### 模式的扩展
+在前面介绍的备忘录模式中，有单状态备份的例子，也有多状态备份的例子。下面介绍备忘录模式如何同原型模式混合使用。在备忘录模式中，通过定义“备忘录”来备份“发起人”的信息，而[原型模式](http://c.biancheng.net/view/1343.html)的 clone() 方法具有自备份功能，所以，如果让发起人实现 Cloneable 接口就有备份自己的功能，这时可以删除备忘录类，其结构图如图 4 所示。
+<br/>
+![](/images/design/85.gif)
+<br/>
+图4 带原型的备忘录模式的结构图
+<br/>
+实现代码如下：
+```java
+package memento;
+public class PrototypeMemento
+{
+    public static void main(String[] args)
+    {
+        OriginatorPrototype or=new OriginatorPrototype();
+        PrototypeCaretaker cr=new PrototypeCaretaker();       
+        or.setState("S0"); 
+        System.out.println("初始状态:"+or.getState());           
+        cr.setMemento(or.createMemento()); //保存状态      
+        or.setState("S1"); 
+        System.out.println("新的状态:"+or.getState());        
+        or.restoreMemento(cr.getMemento()); //恢复状态
+        System.out.println("恢复状态:"+or.getState());
+    }
+}
+//发起人原型
+class OriginatorPrototype  implements Cloneable
+{ 
+    private String state;     
+    public void setState(String state)
+    { 
+        this.state=state; 
+    }
+    public String getState()
+    { 
+        return state; 
+    }
+    public OriginatorPrototype createMemento()
+    { 
+        return this.clone(); 
+    } 
+    public void restoreMemento(OriginatorPrototype opt)
+    { 
+        this.setState(opt.getState()); 
+    }
+    public OriginatorPrototype clone()
+    {
+        try
+        {
+            return (OriginatorPrototype) super.clone();
+        }
+        catch(CloneNotSupportedException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+//原型管理者
+class PrototypeCaretaker
+{ 
+    private OriginatorPrototype opt;       
+    public void setMemento(OriginatorPrototype opt)
+    { 
+        this.opt=opt; 
+    }
+    public OriginatorPrototype getMemento()
+    { 
+        return opt; 
+    }
+}
+```
 
+## 23.解释器模式（详解版）
+在软件开发中，会遇到有些问题多次重复出现，而且有一定的相似性和规律性。如果将它们归纳成一种简单的语言，那么这些问题实例将是该语言的一些句子，这样就可以用“编译原理”中的解释器模式来实现了。
+<br/>
+虽然使用解释器模式的实例不是很多，但对于满足以上特点，且对运行效率要求不是很高的应用实例，如果用解释器模式来实现，其效果是非常好的，本文将介绍其工作原理与使用方法。
+### 模式的定义与特点
+解释器（Interpreter）模式的定义：给分析对象定义一个语言，并定义该语言的文法表示，再设计一个解析器来解释语言中的句子。也就是说，用编译语言的方式来分析应用中的实例。这种模式实现了文法表达式处理的接口，该接口解释一个特定的上下文。
+<br/>
+这里提到的文法和句子的概念同编译原理中的描述相同，“文法”指语言的语法规则，而“句子”是语言集中的元素。例如，汉语中的句子有很多，“我是中国人”是其中的一个句子，可以用一棵语法树来直观地描述语言中的句子。
+<br/>
+解释器模式是一种类行为型模式，其主要优点如下。
+- 1.扩展性好。由于在解释器模式中使用类来表示语言的文法规则，因此可以通过继承等机制来改变或扩展文法。
+- 2.容易实现。在语法树中的每个表达式节点类都是相似的，所以实现其文法较为容易。
+<br/>
+解释器模式的主要缺点如下。
+- 1.执行效率较低。解释器模式中通常使用大量的循环和递归调用，当要解释的句子较复杂时，其运行速度很慢，且代码的调试过程也比较麻烦。
+- 2.会引起类膨胀。解释器模式中的每条规则至少需要定义一个类，当包含的文法规则很多时，类的个数将急剧增加，导致系统难以管理与维护。
+- 3.可应用的场景比较少。在软件开发中，需要定义语言文法的应用实例非常少，所以这种模式很少被使用到。
+### 模式的结构与实现
+解释器模式常用于对简单语言的编译或分析实例中，为了掌握好它的结构与实现，必须先了解编译原理中的“文法、句子、语法树”等相关概念。
+<br/>
+#### 1) 文法
+文法是用于描述语言的语法结构的形式规则。没有规矩不成方圆，例如，有些人认为完美爱情的准则是“相互吸引、感情专一、任何一方都没有恋爱经历”，虽然最后一条准则较苛刻，但任何事情都要有规则，语言也一样，不管它是机器语言还是自然语言，都有它自己的文法规则。例如，中文中的“句子”的文法如下。
+<br/>
+〈句子〉::=〈主语〉〈谓语〉〈宾语〉<br/>
+〈主语〉::=〈代词〉|〈名词〉<br/>
+〈谓语〉::=〈动词〉<br/>
+〈宾语〉::=〈代词〉|〈名词〉<br/>
+〈代词〉你|我|他<br/>
+〈名词〉7大学生I筱霞I英语<br/>
+〈动词〉::=是|学习<br/>
+:::tip 说明
+注：这里的符号“::=”表示“定义为”的意思，用“〈”和“〉”括住的是非终结符，没有括住的是终结符。
+:::
+#### 2) 句子
+句子是语言的基本单位，是语言集中的一个元素，它由终结符构成，能由“文法”推导出。例如，上述文法可以推出“我是大学生”，所以它是句子。
+#### 3) 语法树
+语法树是句子结构的一种树型表示，它代表了句子的推导结果，它有利于理解句子语法结构的层次。图 1 所示是“我是大学生”的语法树。
+<br/>
+![](/images/design/86.gif)
+<br/>
+有了以上基础知识，现在来介绍解释器模式的结构就简单了。解释器模式的结构与组合模式相似，不过其包含的组成元素比组合模式多，而且组合模式是对象结构型模式，而解释器模式是类行为型模式。
+<br/>
+#### 1. 模式的结构
+解释器模式包含以下主要角色。
+- 1.抽象表达式（Abstract Expression）角色：定义解释器的接口，约定解释器的解释操作，主要包含解释方法 interpret()。
+- 2.终结符表达式（Terminal    Expression）角色：是抽象表达式的子类，用来实现文法中与终结符相关的操作，文法中的每一个终结符都有一个具体终结表达式与之相对应。
+- 3.非终结符表达式（Nonterminal Expression）角色：也是抽象表达式的子类，用来实现文法中与非终结符相关的操作，文法中的每条规则都对应于一个非终结符表达式。
+- 4.环境（Context）角色：通常包含各个解释器需要的数据或是公共的功能，一般用来传递被所有解释器共享的数据，后面的解释器可以从这里获取这些值。
+- 5.客户端（Client）：主要任务是将需要分析的句子或表达式转换成使用解释器对象描述的抽象语法树，然后调用解释器的解释方法，当然也可以通过环境角色间接访问解释器的解释方法。
+<br/>
+解释器模式的结构图如图 2 所示。
+<br/>
+![](/images/design/87.gif)
+<br/>
+#### 2. 模式的实现
+解释器模式实现的关键是定义文法规则、设计终结符类与非终结符类、画出结构图，必要时构建语法树，其代码结构如下：
+<br/>
+```java
+//抽象表达式类
+interface AbstractExpression
+{
+    public Object interpret(String info);    //解释方法
+}
+//终结符表达式类
+class TerminalExpression implements AbstractExpression
+{
+    public Object interpret(String info)
+    {
+        //对终结符表达式的处理
+    }
+}
+//非终结符表达式类
+class NonterminalExpression implements AbstractExpression
+{
+    private AbstractExpression exp1;
+    private AbstractExpression exp2;
+    public Object interpret(String info)
+    {
+        //非对终结符表达式的处理
+    }
+}
+//环境类
+class Context
+{
+    private AbstractExpression exp;
+    public Context()
+    {
+        //数据初始化
+    }
+    public void operation(String info)
+    {
+        //调用相关表达式类的解释方法
+    }
+}
+```
 
-
-
-
-
-
-
-
+### 模式的应用实例
+#### 【例1】用解释器模式设计一个“韶粵通”公交车卡的读卡器程序。
+说明：假如“韶粵通”公交车读卡器可以判断乘客的身份，如果是“韶关”或者“广州”的“老人” “妇女”“儿童”就可以免费乘车，其他人员乘车一次扣 2 元。
+<br/>
+分析：本实例用“解释器模式”设计比较适合，首先设计其文法规则如下。
+<br/>
+<expression> ::= <city>的<person><br/>
+<city> ::= 韶关|广州<br/>
+<person> ::= 老人|妇女|儿童<br/>
+然后，根据文法规则按以下步骤设计公交车卡的读卡器程序的类图。
+- 1.定义一个抽象表达式（Expression）接口，它包含了解释方法 interpret(String    info)。
+- 2.定义一个终结符表达式（Terminal Expression）类，它用集合（Set）类来保存满足条件的城市或人，并实现抽象表达式接口中的解释方法 interpret(Stringinfo)，用来判断被分析的字符串是否是集合中的终结符。
+- 3.定义一个非终结符表达式（AndExpressicm）类，它也是抽象表达式的子类，它包含满足条件的城市的终结符表达式对象和满足条件的人员的终结符表达式对象，并实现 interpret(String info) 方法，用来判断被分析的字符串是否是满足条件的城市中的满足条件的人员。
+- 4.最后，定义一个环境（Context）类，它包含解释器需要的数据，完成对终结符表达式的初始化，并定义一个方法 freeRide(String info) 调用表达式对象的解释方法来对被分析的字符串进行解释。其结构图如图 3 所示。
+<br/>
+![](/images/design/88.gif)
+<br/>
+图3 “韶粵通”公交车读卡器程序的结构图
+<br/>
+程序代码如下：
+```java
+package interpreterPattern;
+import java.util.*;
+/*文法规则
+  <expression> ::= <city>的<person>
+  <city> ::= 韶关|广州
+  <person> ::= 老人|妇女|儿童
+*/
+public class InterpreterPatternDemo
+{
+    public static void main(String[] args)
+    {
+        Context bus=new Context();
+        bus.freeRide("韶关的老人");
+        bus.freeRide("韶关的年轻人");
+        bus.freeRide("广州的妇女");
+        bus.freeRide("广州的儿童");
+        bus.freeRide("山东的儿童");
+    }
+}
+//抽象表达式类
+interface Expression
+{
+    public boolean interpret(String info);
+}
+//终结符表达式类
+class TerminalExpression implements Expression
+{
+    private Set<String> set= new HashSet<String>();
+    public TerminalExpression(String[] data)
+    {
+        for(int i=0;i<data.length;i++)set.add(data[i]);
+    }
+    public boolean interpret(String info)
+    {
+        if(set.contains(info))
+        {
+            return true;
+        }
+        return false;
+    }
+}
+//非终结符表达式类
+class AndExpression implements Expression
+{
+    private Expression city=null;    
+    private Expression person=null;
+    public AndExpression(Expression city,Expression person)
+    {
+        this.city=city;
+        this.person=person;
+    }
+    public boolean interpret(String info)
+    {
+        String s[]=info.split("的");       
+        return city.interpret(s[0])&&person.interpret(s[1]);
+    }
+}
+//环境类
+class Context
+{
+    private String[] citys={"韶关","广州"};
+    private String[] persons={"老人","妇女","儿童"};
+    private Expression cityPerson;
+    public Context()
+    {
+        Expression city=new TerminalExpression(citys);
+        Expression person=new TerminalExpression(persons);
+        cityPerson=new AndExpression(city,person);
+    }
+    public void freeRide(String info)
+    {
+        boolean ok=cityPerson.interpret(info);
+        if(ok) System.out.println("您是"+info+"，您本次乘车免费！");
+        else System.out.println(info+"，您不是免费人员，本次乘车扣费2元！");   
+    }
+}
+```
+### 模式的应用场景
+前面介绍了解释器模式的结构与特点，下面分析它的应用场景。
+- 1.当语言的文法较为简单，且执行效率不是关键问题时。
+- 2.当问题重复出现，且可以用一种简单的语言来进行表达时。
+- 3.当一个语言需要解释执行，并且语言中的句子可以表示为一个抽象语法树的时候，如 XML 文档解释。
+<br/>
+注意：解释器模式在实际的软件开发中使用比较少，因为它会引起效率、性能以及维护等问题。如果碰到对表达式的解释，在 Java 中可以用 Expression4J 或 Jep 等来设计。
+<br/>
+### 模式的扩展
+在项目开发中，如果要对数据表达式进行分析与计算，无须再用解释器模式进行设计了，Java 提供了以下强大的数学公式解析器：Expression4J、MESP(Math Expression String Parser) 和 Jep 等，它们可以解释一些复杂的文法，功能强大，使用简单。
+<br/>
+现在以 Jep 为例来介绍该工具包的使用方法。Jep 是 Java expression parser 的简称，即 Java 表达式分析器，它是一个用来转换和计算数学表达式的 Java 库。通过这个程序库，用户可以以字符串的形式输入一个任意的公式，然后快速地计算出其结果。而且 Jep 支持用户自定义变量、常量和函数，它包括许多常用的数学函数和常量。
+<br/>
+使用前先下载 Jep 压缩包，解压后，将 jep-x.x.x.jar 文件移到选择的目录中，在 Eclipse 的“Java 构建路径”对话框的“库”选项卡中选择“添加外部 JAR(X)...”，将该 Jep 包添加项目中后即可使用其中的类库。
+<br/>
+下面以计算存款利息为例来介绍。存款利息的计算公式是：本金x利率x时间=利息，其相关代码如下：
+<br/>
+```java
+package interpreterPattern;
+import com.singularsys.jep.*;
+public class JepDemo
+{
+    public static void main(String[] args) throws JepException
+    {
+        Jep jep=new Jep();
+        //定义要计算的数据表达式
+        String 存款利息="本金*利率*时间";
+        //给相关变量赋值
+        jep.addVariable("本金",10000);
+        jep.addVariable("利率",0.038);
+        jep.addVariable("时间",2);
+        jep.parse(存款利息);    //解析表达式
+        Object accrual=jep.evaluate();    //计算
+        System.out.println("存款利息："+accrual);
+    }
+}
+```
