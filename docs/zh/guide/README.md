@@ -101,4 +101,9 @@ ___
 | col 2 is      | centered      |   $12 |
 | zebra stripes | are neat      |    $1 |
 
+ ## IDEA自动提示vue和elementui的配置
+ ### 提示vue文件：
+ [配置idea自动提示VUE](https://blog.csdn.net/li1325169021/article/details/99710057)
+ ### 配置elmentUI插件
+ [IDEA使用哦个elementUI插件](https://github.com/jiaolong1021/ElementPlugin)
  
