@@ -181,6 +181,7 @@ function getBlockChain(type) {
         '/block/info/distrubute-account-no-center-network.md',
         '/block/info/bitcoin-data-struct.md',
         '/block/info/workload-proof.md',
+        '/block/info/docker-start.md'
     ]
     return mapArr.map(item => {
         return type + item
